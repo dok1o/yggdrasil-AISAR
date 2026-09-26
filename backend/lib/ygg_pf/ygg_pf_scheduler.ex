@@ -36,11 +36,12 @@ defmodule GenS.YggPFScheduler do
   use GenServer
   require Logger
 
-  alias YggPF.{Codec, Const, Cursor, Diag, Paint, Self}
+  alias YggPF.{Codec, Const, Cursor, Diag, Funnel, Paint, Self}
 
   @tick_ms 250
   @diag_tick_ms 10_000
   @clean_tick_ms 5_000
+  @verify_tick_ms 30_000
   @ticks_per_second div(1_000, @tick_ms)
   @paint_lag_ticks 2
 
@@ -92,12 +93,15 @@ defmodule GenS.YggPFScheduler do
     st = arm_scan_gate(st)
 
     Paint.create_tables()
+    Funnel.create_table()
+    Diag.log_startup(st.cursor.cursor)
 
     case Keyword.get(opts, :autotick, true) do
       true ->
         :timer.send_interval(@tick_ms, :tick)
         :timer.send_interval(@diag_tick_ms, :diag)
         :timer.send_interval(@clean_tick_ms, :clean)
+        :timer.send_interval(@verify_tick_ms, :verify)
 
       false ->
         :ok
@@ -128,11 +132,26 @@ defmodule GenS.YggPFScheduler do
 
   def handle_info(:diag, st) do
     Diag.log_state(st.cursor.cursor)
+    Funnel.report()
     {:noreply, st}
   end
 
   def handle_info(:clean, st) do
     Paint.clean()
+    {:noreply, st}
+  end
+
+  # Periodically ask the nodes we painted whether they still hold us. This is the
+  # only way to tell "our encoding is wrong" from "our paint is being dropped".
+  def handle_info(:verify, st) do
+    epoch = Codec.current_epoch()
+    prefix = Codec.derive_prefix(0, st.cursor.cursor, epoch)
+
+    case own_yid(0, prefix) do
+      nil -> :ok
+      yid -> Paint.verify(yid, reply_ctx(st.cursor.cursor, epoch))
+    end
+
     {:noreply, st}
   end
 
@@ -163,6 +182,7 @@ defmodule GenS.YggPFScheduler do
       false ->
         Logger.debug("[YggPF] epoch #{st.cursor.epoch} -> #{epoch}, cursor reset to 0")
         Paint.reset_epoch()
+        Funnel.reset()
 
         %{
           st
@@ -184,9 +204,11 @@ defmodule GenS.YggPFScheduler do
   defp dispatch_scan(st) do
     cond do
       now_ms() < st.scan_gate_ms ->
+        Funnel.bump(:scan_gated)
         %{st | stats: Map.update!(st.stats, :skipped_scan, &(&1 + 1))}
 
       true ->
+        Funnel.bump(:scan_tick)
         cursors = Cursor.active(st.cursor)
         {n, st} = take(st, :scan, Const.scan_per_second() * length(cursors))
 
@@ -195,15 +217,22 @@ defmodule GenS.YggPFScheduler do
     end
   end
 
-  # Paint is withheld until scanning has had a chance to establish the cursor (spec section 24).
-  defp dispatch_paint(st) when st.scanned_this_epoch == 0, do: st
+  # Paint is withheld until scanning has had a chance to establish the cursor
+  # (spec section 24). Every reason for withholding is counted, because "no paint"
+  # and "paint produced nothing" look identical downstream.
+  defp dispatch_paint(st) when st.scanned_this_epoch == 0 do
+    Funnel.bump(:paint_skip_lag)
+    st
+  end
 
   defp dispatch_paint(st) do
     case st.tick < @paint_lag_ticks do
       true ->
+        Funnel.bump(:paint_skip_lag)
         st
 
       false ->
+        Funnel.bump(:paint_tick)
         cursors = Cursor.active(st.cursor)
         {n, st} = take(st, :paint, Const.paint_per_second() * length(cursors))
         emit_each(st, :paint, cursors, n)
@@ -274,8 +303,19 @@ defmodule GenS.YggPFScheduler do
       case kind do
         k when k in [:paint, :fixed_paint] ->
           case own_yid(part, prefix) do
-            nil -> :skip
-            yid -> Paint.paint(yid, target, ctx)
+            nil ->
+              # The single most common silent failure: no Ygg address, so there is
+              # literally nothing to paint, and the swarm can never see us.
+              Funnel.bump(:paint_skip_no_addr)
+
+              Logger.warning(
+                "[YggPF] CANNOT PAINT part #{part}: own Yggdrasil address unavailable " <>
+                  "(#{Self.explain_unavailable()})"
+              )
+
+            yid ->
+              Funnel.bump(:paint_addr_ok)
+              Paint.paint(yid, target, ctx)
           end
 
         k when k in [:scan, :fixed_scan] ->

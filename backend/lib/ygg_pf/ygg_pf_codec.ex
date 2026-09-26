@@ -296,6 +296,35 @@ defmodule YggPF.Codec do
 
   def fragment(_id), do: :error
 
+  @doc """
+  Number of leading bits two binaries share.
+
+  Used purely for diagnostics: it answers "is the DHT even routing us into the
+  right neighbourhood?" without needing an exact prefix match.
+  """
+  @spec common_prefix_bits(binary(), binary()) :: non_neg_integer()
+  def common_prefix_bits(a, b) when is_binary(a) and is_binary(b) do
+    count_common(a, b, 0)
+  end
+
+  defp count_common(<<x, ra::binary>>, <<y, rb::binary>>, acc) when x == y,
+    do: count_common(ra, rb, acc + 8)
+
+  defp count_common(<<x, _::binary>>, <<y, _::binary>>, acc),
+    do: acc + leading_zeros(Bitwise.bxor(x, y))
+
+  defp count_common(_a, _b, acc), do: acc
+
+  defp leading_zeros(0), do: 8
+  defp leading_zeros(byte) when byte < 2, do: 7
+  defp leading_zeros(byte) when byte < 4, do: 6
+  defp leading_zeros(byte) when byte < 8, do: 5
+  defp leading_zeros(byte) when byte < 16, do: 4
+  defp leading_zeros(byte) when byte < 32, do: 3
+  defp leading_zeros(byte) when byte < 64, do: 2
+  defp leading_zeros(byte) when byte < 128, do: 1
+  defp leading_zeros(_byte), do: 0
+
   @doc "Byte size of a well-formed yid, for guards and tests."
   def yid_bytes, do: @yid_bytes
   def painter_bytes, do: @painter_bytes

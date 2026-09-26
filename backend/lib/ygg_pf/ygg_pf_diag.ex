@@ -39,6 +39,49 @@ defmodule YggPF.Diag do
     :ok
   end
 
+  @doc """
+  One-time banner at startup: configuration, identity and the exact yids we will be
+  painting, so the operator can grep for them in the DHT.
+  """
+  @spec log_startup(non_neg_integer()) :: :ok
+  def log_startup(cursor) do
+    now = System.os_time(:second)
+    epoch = Codec.epoch(now)
+
+    Logger.info([
+      "\n[YggPF] ############ ygg_pf STARTING ############\n",
+      "[YggPF]  enable_ygg      : #{safe(fn -> KeyStorageSync.use_ygg?() end)}\n",
+      "[YggPF]  own uaddr       : #{own_uaddr_line()}\n",
+      "[YggPF]  hash / prefix   : #{Const.hash_algo()} -> #{Const.prefix_bits()} bits\n",
+      "[YggPF]  parts           : N=#{Const.n_parts()} x #{Const.part_bits()} bits\n",
+      "[YggPF]  epoch           : #{Const.epoch_seconds()}s (now #{epoch})\n",
+      "[YggPF]  rates           : #{Const.epoch_queries_per_second()} q/s epoch + " <>
+        "#{Const.fixed_queries_per_second()} q/s fixed\n",
+      "[YggPF]  ask cooldown    : #{Const.ask_cooldown_ms()}ms  " <>
+        "candidate cooldown: #{Const.cooldown_ms()}ms\n",
+      "[YggPF]  label part0/R0  : #{Const.prefix_label(0, 0)}\n",
+      identity_lines(cursor, epoch),
+      "[YggPF] #########################################"
+    ])
+
+    :ok
+  end
+
+  defp own_uaddr_line do
+    case Self.uaddr() do
+      nil -> "UNKNOWN (NAT check has not completed; self-sightings cannot be attributed)"
+      u -> peer(u)
+    end
+  end
+
+  defp safe(fun) do
+    fun.()
+  rescue
+    e -> "error: #{inspect(e)}"
+  catch
+    :exit, r -> "exit: #{inspect(r)}"
+  end
+
   # ------------------------------------------------------------------ #
 
   defp identity_lines(cursor, epoch) do

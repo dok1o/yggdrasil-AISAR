@@ -132,6 +132,41 @@ defmodule YggPF.Self do
 
   # `Ygg.self_info/1` reports a *formatted* address string and a *hex* key, not raw
   # binaries - parse rather than pattern match.
+  @doc """
+  Human-readable reason our own Yggdrasil address could not be determined.
+
+  Painting is impossible without it, and the failure is otherwise completely
+  silent, so the reason is surfaced verbatim rather than collapsed to "unavailable".
+  """
+  @spec explain_unavailable() :: String.t()
+  def explain_unavailable do
+    case safe_self_info() do
+      {:ok, %{address: addr}} when is_binary(addr) ->
+        "Ygg.self_info/1 returned address #{inspect(addr)} but it does not parse as IPv6"
+
+      {:ok, %{} = info} ->
+        "Ygg.self_info/1 returned a map without an :address key - keys: " <>
+          inspect(Map.keys(info))
+
+      {:ok, {:error, :not_running}} ->
+        "the embedded Yggdrasil node is not running (Ygg.self_info/1 -> {:error, :not_running})"
+
+      {:ok, other} ->
+        "Ygg.self_info/1 returned #{inspect(other)}"
+
+      {:error, reason} ->
+        "Ygg.self_info/1 raised or exited: #{inspect(reason)}"
+    end
+  end
+
+  defp safe_self_info do
+    {:ok, Ygg.self_info()}
+  rescue
+    e -> {:error, e}
+  catch
+    :exit, reason -> {:error, {:exit, reason}}
+  end
+
   defp compute_painter_address do
     case Ygg.self_info() do
       %{address: addr} when is_binary(addr) ->

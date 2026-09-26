@@ -25,9 +25,12 @@ defmodule YggPF.Reconstruct do
   """
 
   require Logger
-  alias YggPF.{Codec, Const}
+  alias YggPF.{Codec, Const, Funnel}
 
   @n_parts Const.n_parts()
+  @prefix_bytes Const.prefix_bytes()
+  @affix_bytes Const.affix_bytes()
+  @prefix_bits Const.prefix_bits()
 
   @typedoc "A compact `nodes` entry: the 20-byte id and the 6/18-byte underlay address."
   @type node_entry :: {binary(), binary()}
@@ -66,13 +69,8 @@ defmodule YggPF.Reconstruct do
   @spec fragments([node_entry()], non_neg_integer(), non_neg_integer(), uaddr() | nil) ::
           %{non_neg_integer() => [fragment()]}
   def fragments(nodes, cursor, epoch, responder \\ nil) do
-    for {id, uaddr} <- nodes,
-        part_index <- 0..(@n_parts - 1),
-        Codec.prefix_match?(id, part_index, cursor, epoch),
-        {:ok, part} <- [Codec.fragment(id)],
-        reduce: %{} do
-      acc -> add(acc, part_index, part, uaddr, responder)
-    end
+    prefixes = Enum.map(0..(@n_parts - 1), &Codec.derive_prefix(&1, cursor, epoch))
+    collect(nodes, prefixes, responder)
   end
 
   @doc """
@@ -81,13 +79,76 @@ defmodule YggPF.Reconstruct do
   @spec fixed_fragments([node_entry()], uaddr() | nil) ::
           %{non_neg_integer() => [fragment()]}
   def fixed_fragments(nodes, responder \\ nil) do
-    for {id, uaddr} <- nodes,
-        part_index <- 0..(@n_parts - 1),
-        Codec.fixed_prefix_match?(id, part_index),
-        {:ok, part} <- [Codec.fragment(id)],
-        reduce: %{} do
-      acc -> add(acc, part_index, part, uaddr, responder)
-    end
+    prefixes = Enum.map(0..(@n_parts - 1), &Codec.derive_fixed_prefix/1)
+    collect(nodes, prefixes, responder)
+  end
+
+  # Single instrumented pass. Every entry is scored against every region prefix so
+  # the funnel can distinguish "nothing in the region" from "in the region but the
+  # affix is invalid" - two failures that look identical from the outside.
+  defp collect(nodes, prefixes, responder) do
+    Enum.reduce(nodes, %{}, fn {id, uaddr}, acc ->
+      Funnel.bump(:entry)
+      note_agreement(id, prefixes)
+
+      case match_part(id, prefixes) do
+        nil ->
+          acc
+
+        {part_index, _prefix} ->
+          Funnel.bump(:prefix_hit)
+
+          case Codec.fragment(id) do
+            {:ok, part} ->
+              Funnel.bump(:checksum_ok)
+              Logger.debug(fn -> hit_line(part_index, id, uaddr, responder, :ok) end)
+              add(acc, part_index, part, uaddr, responder)
+
+            :error ->
+              Funnel.bump(:checksum_fail)
+              Logger.info(hit_line(part_index, id, uaddr, responder, :bad_checksum))
+              acc
+          end
+      end
+    end)
+  end
+
+  defp match_part(id, prefixes) do
+    prefixes
+    |> Enum.with_index()
+    |> Enum.find_value(fn {prefix, i} ->
+      case id do
+        <<^prefix::binary-size(@prefix_bytes), _::binary-size(@affix_bytes)>> -> {i, prefix}
+        _no_match -> nil
+      end
+    end)
+  end
+
+  # Cheap gauge: how close did the DHT get us to the region, even when nothing matched.
+  defp note_agreement(id, prefixes) do
+    Enum.each(prefixes, fn prefix ->
+      Funnel.note_prefix_bits(min(Codec.common_prefix_bits(id, prefix), @prefix_bits))
+    end)
+  end
+
+  # A prefix hit is rare and always worth seeing in full.
+  defp hit_line(part_index, id, uaddr, responder, status) do
+    tag =
+      case status do
+        :ok -> "PREFIX HIT + valid affix"
+        :bad_checksum -> "PREFIX HIT but AFFIX CHECKSUM FAILED"
+      end
+
+    "[YggPF] #{tag}: part=#{part_index} id=#{Base.encode16(id, case: :lower)} " <>
+      "entry_uaddr=#{fmt(uaddr)} responder=#{fmt(responder)}"
+  end
+
+  defp fmt(nil), do: "unknown"
+
+  defp fmt(u) do
+    PrinterSync.peer(u)
+  rescue
+    _ -> Base.encode16(u, case: :lower)
   end
 
   defp add(acc, part_index, part, uaddr, responder) do
@@ -140,8 +201,12 @@ defmodule YggPF.Reconstruct do
     a
     |> pairs(b, max_pairs)
     |> Enum.reduce(%{}, fn {fa, fb}, acc ->
+      Funnel.bump(:pair)
+
       case reconstruct_pair(fa.part, fb.part) do
         {:ok, yaddr} ->
+          Funnel.bump(:ygg_ok)
+
           Map.update(
             acc,
             yaddr,
@@ -160,10 +225,12 @@ defmodule YggPF.Reconstruct do
           )
 
         :error ->
+          Funnel.bump(:ygg_fail)
           acc
       end
     end)
     |> Map.values()
+    |> tap(fn list -> Funnel.bump(:candidate, length(list)) end)
   end
 
   # Lazily bound the cross product so a flooded region cannot materialise a huge list.

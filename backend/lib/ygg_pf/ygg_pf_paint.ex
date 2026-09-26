@@ -31,7 +31,7 @@ defmodule YggPF.Paint do
   """
 
   require Logger
-  alias YggPF.Const
+  alias YggPF.{Const, Funnel}
 
   @ets_cooldown :ygg_pf_asked
   @ets_unique :ygg_pf_asked_uniq
@@ -64,15 +64,51 @@ defmodule YggPF.Paint do
   def scan(target, ctx), do: emit(target, :nid, ctx, :scan)
 
   defp emit(target, sender_id, ctx, kind) do
-    target
-    |> pick_nodes()
-    |> Enum.filter(fn {_rid, nodev4} -> cooled_down?(nodev4) end)
-    |> Enum.reduce(0, fn {rid, nodev4}, acc ->
-      TryETS.set_cooldown_ms(@ets_cooldown, nodev4, Const.ask_cooldown_ms())
-      if kind == :paint, do: note_asked(rid, nodev4)
-      KRPCOutSync.find_node(target, nodev4, ctx, sender_id)
-      acc + 1
+    all = pick_nodes(target)
+    ready = Enum.filter(all, fn {_rid, nodev4} -> cooled_down?(nodev4) end)
+
+    Funnel.bump(stage(kind, :target_nodes), length(all))
+    if all == [], do: Funnel.bump(stage(kind, :no_nodes))
+
+    Logger.debug(fn ->
+      "[YggPF] #{kind}: target=#{hex(target)} sender_id=#{sender_label(sender_id)} " <>
+        "candidates=#{length(all)} ready_after_cooldown=#{length(ready)}"
     end)
+
+    sent =
+      Enum.reduce(ready, 0, fn {rid, nodev4}, acc ->
+        TryETS.set_cooldown_ms(@ets_cooldown, nodev4, Const.ask_cooldown_ms())
+        if kind == :paint, do: note_asked(rid, nodev4)
+
+        Logger.debug(fn ->
+          "[YggPF]   -> #{kind} #{fmt(nodev4)} their_id=#{hex(rid)}"
+        end)
+
+        KRPCOutSync.find_node(target, nodev4, ctx, sender_id)
+        acc + 1
+      end)
+
+    Funnel.bump(stage(kind, :sent), sent)
+    sent
+  end
+
+  defp stage(:paint, :target_nodes), do: :paint_target_nodes
+  defp stage(:paint, :no_nodes), do: :paint_no_nodes
+  defp stage(:paint, :sent), do: :paint_sent
+  defp stage(:scan, :target_nodes), do: :scan_target_nodes
+  defp stage(:scan, :no_nodes), do: :scan_no_nodes
+  defp stage(:scan, :sent), do: :scan_sent
+
+  defp sender_label(:nid), do: "our own node id (:nid)"
+  defp sender_label(id) when is_binary(id), do: hex(id) <> " (yid - the payload)"
+
+  defp hex(b) when is_binary(b), do: Base.encode16(b, case: :lower)
+  defp hex(other), do: inspect(other)
+
+  defp fmt(u) do
+    PrinterSync.peer(u)
+  rescue
+    _ -> hex(u)
   end
 
   # Mirrors Sender.send_fn_queries/2: fall back to a random node when the routing
@@ -127,6 +163,38 @@ defmodule YggPF.Paint do
   """
   @spec reset_epoch() :: any()
   def reset_epoch, do: TryETS.delete_all(@ets_unique)
+
+  @doc """
+  Re-query the nodes we painted to, asking for the region around our own yid.
+
+  This is a direct test of whether remote nodes actually *retain* our paint.
+  Mainline implementations commonly hold an unknown sender as pending and only
+  keep it once it answers a verification ping - and our KRPC responder answers
+  under our ordinary node id, not under the painted yid. If that is happening,
+  painting silently decays and discovery can never work no matter how correct the
+  encoding is.
+
+  The replies come back through the normal `:ygg_pf` context, so if a painted node
+  still holds us, our own yid reappears and the self-sighting path reports it.
+  Counters `verify_asked` / `verify_returned_our_yid` in `YggPF.Funnel` summarise
+  the outcome. Bypasses the ask cooldown on purpose: this is a measurement.
+  """
+  @spec verify(binary(), term()) :: non_neg_integer()
+  def verify(own_yid, ctx) when is_binary(own_yid) do
+    painted = TryETS.tab2list(@ets_unique)
+
+    Logger.info(
+      "[YggPF] PAINT VERIFY: re-querying #{length(painted)} previously painted node(s) " <>
+        "for yid=#{Base.encode16(own_yid, case: :lower)}"
+    )
+
+    Enum.each(painted, fn {nodev4, _rid} ->
+      Funnel.bump(:verify_asked)
+      KRPCOutSync.find_node(own_yid, nodev4, ctx, :nid)
+    end)
+
+    length(painted)
+  end
 
   @doc "Drop expired cooldown entries."
   @spec clean() :: any()

@@ -28,7 +28,7 @@ defmodule GenS.YggPFScanner do
   use GenServer
   require Logger
 
-  alias YggPF.{Const, Log, Reconstruct, Self, Store, Wire}
+  alias YggPF.{Codec, Const, Funnel, Log, Reconstruct, Self, Store, Wire}
 
   @ets_cooldown :ygg_pf_pinged
   @stats_tick_ms 5_000
@@ -117,6 +117,16 @@ defmodule GenS.YggPFScanner do
 
   @impl true
   def handle_cast({:nodes, nodes, cursor, epoch, responder}, st) do
+    Funnel.bump(:reply)
+    live = Codec.current_epoch()
+    if epoch != live, do: Funnel.bump(:reply_stale_epoch)
+
+    Logger.debug(fn ->
+      "[YggPF] reply: #{length(nodes)} entries from #{fmt(responder)} " <>
+        "ctx cursor=#{cursor} epoch=#{epoch}" <>
+        if(epoch != live, do: " STALE (live epoch #{live})", else: "")
+    end)
+
     frags = Reconstruct.fragments(nodes, cursor, epoch, responder)
     matched = Reconstruct.match_count(frags)
 
@@ -130,6 +140,8 @@ defmodule GenS.YggPFScanner do
       |> Reconstruct.candidates()
       |> Enum.split_with(&Self.own_yaddr?(&1.yaddr))
 
+    Funnel.bump(:self_candidate, length(mine))
+    if mine != [], do: Funnel.bump(:verify_returned_our_yid, length(mine))
     origins = Enum.map(mine, &Log.log_self_discovery/1)
     Enum.each(others, &probe_candidate/1)
 
@@ -207,6 +219,7 @@ defmodule GenS.YggPFScanner do
   def handle_cast({:pf_packet, packet, uaddr}, st) do
     case Wire.pong_fid(packet) do
       {:ok, fid} ->
+        Funnel.bump(:pong)
         Log.log_pong(uaddr, fid)
         Store.note_uaddr_response(fid, uaddr)
         probe_yaddr(fid)
@@ -222,6 +235,11 @@ defmodule GenS.YggPFScanner do
 
       :error ->
         # Malformed, wrong opcode, or a legacy v1 packet that cannot carry a fid.
+        Logger.debug(fn ->
+          "[YggPF] inbound PF packet from #{fmt(uaddr)} is not a v2 pong: " <>
+            inspect(Wire.parse(packet))
+        end)
+
         {:noreply, st}
     end
   end
@@ -231,6 +249,7 @@ defmodule GenS.YggPFScanner do
     with {:ok, fid} <- Wire.pong_fid(packet),
          true <- Store.yaddr_matches?(fid, yaddr) do
       uaddrs = pending_uaddrs(fid)
+      Funnel.bump(:validated)
       Store.note_yaddr_response(fid, yaddr, uaddrs)
 
       Logger.info(
@@ -295,7 +314,11 @@ defmodule GenS.YggPFScanner do
     Enum.each(uaddrs, fn uaddr ->
       if TryETS.cooled_down_ms?(@ets_cooldown, uaddr) do
         TryETS.set_cooldown_ms(@ets_cooldown, uaddr, Const.cooldown_ms())
+        Funnel.bump(:pingx)
+        Logger.info("[YggPF] pingx -> #{fmt(uaddr)} (reconstructed candidate)")
         Wire.pingx(uaddr)
+      else
+        Logger.debug(fn -> "[YggPF] pingx suppressed, #{fmt(uaddr)} still cooling" end)
       end
     end)
   end
@@ -326,5 +349,13 @@ defmodule GenS.YggPFScanner do
   end
 
   defp short(fid), do: fid |> Base.encode16(case: :lower) |> binary_part(0, 12)
+
+  defp fmt(nil), do: "unknown"
+
+  defp fmt(u) do
+    PrinterSync.peer(u)
+  rescue
+    _ -> Base.encode16(u, case: :lower)
+  end
   defp now_ms, do: System.monotonic_time(:millisecond)
 end
