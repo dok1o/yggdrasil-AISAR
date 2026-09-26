@@ -1,0 +1,29 @@
+# Python
+venv*/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Elixir / Mix
+backend/_build/
+backend/deps/
+
+# Runtime data
+data/logs/
+data/caches/
+data/journals/
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
+# Local Yggdrasil identity
+data/ygg/ygg_key.hex
+
+# Windows download metadata copied into WSL
+*:Zone.Identifier
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
