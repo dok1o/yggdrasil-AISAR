@@ -1,0 +1,29 @@
+{
+  "PrivateKey": "",
+  "PrivateKeyFile": "ygg_key.hex",
+  "Peers": [],
+  "PeerListFile": "priv/peers/peer_list_09_21_europe.txt",
+  "Listen": ["tcp://127.0.0.1:0"],
+  "AllowedPublicKeys": [],
+  "NodeInfo": {},
+  "NodeInfoPrivacy": false,
+  "PublicPeers": {
+    "Enabled": false,
+    "Count": 10,
+    "CacheFile": "public_peers.cache",
+    "CacheTTLHours": 24,
+    "Regions": ["europe", "north-america", "south-america", "asia", "africa", "other"]
+  },
+  "StatusIntervalSec": 10,
+  "SendSigReq": true,
+  "Router": "native",
+  "Routing": {
+    "DumpIntervalSec": 5,
+    "RoutingLogFile": "log/routing.jsonl",
+    "GroupPassword": "",
+    "DumpBloomFull": false
+  },
+  "KeysFile": "keys_collected.txt",
+  "AddressFile": "ygg_address.txt",
+  "LogFile": "log/ygg.log"
+}

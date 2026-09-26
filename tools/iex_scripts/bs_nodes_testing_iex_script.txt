@@ -1,0 +1,66 @@
+defmodule DHTChecker do
+  # A comprehensive list of modern DHT bootstrap nodes
+@bootstrap_nodes [
+  # Your existing working ones
+  {~c"dht.transmissionbt.com", 6881},
+  {~c"dht.libtorrent.org", 25401},
+
+  # Additional nodes to try
+  {~c"router.magnets.im", 6881},          # Magnets.im public bootstrap
+  {~c"dht.stacksmashing.net", 6881},      # Community node
+  {~c"router.nuh.dev", 6881},             # Community node
+  {~c"dht.bitcoin.sprovoost.nl", 6881},   # Sometimes responsive
+
+  # Direct IP fallbacks (bypasses DNS issues entirely)
+  # These are well-known, long-lived nodes observed in the wild.
+  # They may change, but are worth trying:
+
+  # router.bittorrent.com historical IPs (try directly since DNS may be flaky)
+  {{67, 215, 246, 10}, 6881},
+  # Transmission's node by IP
+  {{87, 98, 162, 88}, 6881},
+  # libtorrent's node by IP  
+  {{185, 157, 221, 247}, 25401},
+]
+
+ def check_all do
+  	IO.puts("Starting DHT Bootstrap responsiveness test...\n")
+	
+  	Enum.each(@bootstrap_nodes, fn
+    	# Tuple IP (already resolved)
+    	{{_, _, _, _} = ip, port} ->
+      	ping(ip, port, :inet.ntoa(ip))
+	
+    	# Hostname that needs resolution
+    	{host, port} ->
+      	case :inet.getaddr(host, :inet) do
+        	{:ok, ip} ->
+          	ping(ip, port, host)
+        	{:error, reason} ->
+          	IO.puts("❌ Could not resolve #{host}: #{reason}")
+      	end
+  	end)
+	
+  	IO.puts("\nTest complete.")
+	end
+
+  def ping(ip, port, host) do
+    # Bencoded 'ping' query
+    # q: ping, t: aa (transaction id), y: q (query), a: {id: 20-byte-string}
+    payload = "d1:ad2:id20:abcdefghij0123456789e1:q4:ping1:t2:aa1:y1:qe"
+    
+    # We open a UDP socket. Using 0 lets the OS pick any available local port.
+    {:ok, socket} = :gen_udp.open(0, [:binary, active: false])
+    :gen_udp.send(socket, ip, port, payload)
+    
+    case :gen_udp.recv(socket, 0, 3500) do
+      {:ok, {_, _, _response}} ->
+        IO.puts("✅ #{host}:#{port} (#{:inet.ntoa(ip)}) is ALIVE.")
+      {:error, :timeout} ->
+        IO.puts("❌ #{host}:#{port} (#{:inet.ntoa(ip)}) timed out.")
+    end
+    :gen_udp.close(socket)
+  end
+end
+
+DHTChecker.check_all()
