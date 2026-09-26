@@ -1,0 +1,17 @@
+%{
+  "exqlite-nif-2.17-aarch64-apple-darwin-0.41.0.tar.gz" => "sha256:fd16bcf04519b0dbe92f780abe822622dcd6bd514d7b5b426ef17d461a566784",
+  "exqlite-nif-2.17-aarch64-linux-android-0.41.0.tar.gz" => "sha256:97812a5e6d59552a0ce6b14084fad0a155823a260ba496fa812afec3f5003fa7",
+  "exqlite-nif-2.17-aarch64-linux-gnu-0.41.0.tar.gz" => "sha256:773638120b3885d381d14989aa74dffaab80621923ba9faee96f71f8de4ce9ab",
+  "exqlite-nif-2.17-aarch64-linux-musl-0.41.0.tar.gz" => "sha256:b7f38950c103abfbfd153507a07daf799f74af6269c3bd22b23d4fa332cb39ef",
+  "exqlite-nif-2.17-armv7a-linux-androideabi-0.41.0.tar.gz" => "sha256:3a30ecc04ca25b8d8e4df972788825c08eb3547d7cd2ecedacc0de02d1f9540f",
+  "exqlite-nif-2.17-armv7l-linux-gnueabihf-0.41.0.tar.gz" => "sha256:8dc4c21afba6193103c0ca49414c8ca37d32f56b4d65793806a4156cba529458",
+  "exqlite-nif-2.17-i686-linux-gnu-0.41.0.tar.gz" => "sha256:7122a722d2a94153b98a6e1a6c6dc61ef6943a145ec0a87fb0065495e51bac70",
+  "exqlite-nif-2.17-powerpc64le-linux-gnu-0.41.0.tar.gz" => "sha256:aec8ceb36fa1dc4b3f3b811e400003124ebbec8759d6b4c2987dfc3bfc7c92c2",
+  "exqlite-nif-2.17-riscv64-linux-gnu-0.41.0.tar.gz" => "sha256:393e58dd3751f0eded16cb87a37d4dbbbf02d40506da48bbbe02e356a10a23e2",
+  "exqlite-nif-2.17-riscv64-linux-musl-0.41.0.tar.gz" => "sha256:d510a65547ac2bbe56c749d02f69f8ad4cbabb0b0dd9d2a357bee44963467076",
+  "exqlite-nif-2.17-s390x-linux-gnu-0.41.0.tar.gz" => "sha256:306ec4f1351b089c513958636a2dec9c7174680fc6b3983054ad81d4ca4a9e34",
+  "exqlite-nif-2.17-x86_64-apple-darwin-0.41.0.tar.gz" => "sha256:3c95469cbbafad2520646c77ba546e05e0f4c7797dea56cb41753d5b82fb46d4",
+  "exqlite-nif-2.17-x86_64-linux-gnu-0.41.0.tar.gz" => "sha256:862e178fa06021879e53861bd4834a80c45801f7db6b038a2444e71e8d20cff1",
+  "exqlite-nif-2.17-x86_64-linux-musl-0.41.0.tar.gz" => "sha256:d39bca51a14b65c818234ed66500b52843d5697ae02acd9d4db682fec998d45b",
+  "exqlite-nif-2.17-x86_64-windows-msvc-0.41.0.tar.gz" => "sha256:2e39b26891c04bf7deeb4c714bc0531e4b3714effe2e4b076f9b0987cf51e66d",
+}

@@ -1,0 +1,338 @@
+2026-09-26 16:13:42.075 [info] Log file: /home/dok1o/Code/ms_v68/data/logs/ygg.log
+2026-09-26 16:13:42.089 [info] Key created: 3f82887fba34d33d1511dc23e0ba25d4e6383dd184a5a4b67d25cc74874759b4
+2026-09-26 16:13:42.089 [info] Address 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e, subnet 302:3eb:bc02:2e59::/64
+2026-09-26 16:13:42.095 [info] Key recorded in /home/dok1o/Code/ms_v68/data/ygg/keys_collected.txt
+2026-09-26 16:13:42.196 [info] Address file /home/dok1o/Code/ms_v68/data/ygg/ygg_address.txt: 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e 0 3f82887fba34d33d1511dc23e0ba25d4e6383dd184a5a4b67d25cc74874759b4
+2026-09-26 16:13:42.481 [info] Connected outbound: 221:c99a:91a1:cd2c:3164:27d7:9675:bf7d@62.210.85.80:39565, source 172.27.72.173:46924
+2026-09-26 16:13:42.481 [info] Connected outbound: 225:7634:2b02:5ab:feb4:7404:bef7:5bec@146.103.111.53:65535, source 172.27.72.173:51976
+2026-09-26 16:13:42.481 [info] Connected outbound: 223:a490:c90a:c54a:b4e4:d5c:d9d6:b577@212.34.131.160:65535, source 172.27.72.173:50706
+2026-09-26 16:13:42.481 [info] Connected outbound: 225:124e:2a74:9966:d18d:2f19:adbf:a950@109.107.177.127:65535, source 172.27.72.173:33040
+2026-09-26 16:13:42.482 [info] Connected outbound: 200:ea1e:b8f8:fd1c:cc8e:3ead:9c2b:6d5f@5.252.118.13:65535, source 172.27.72.173:34722
+2026-09-26 16:13:42.490 [debug] Dialling tls://yggpeer.tilde.green:59454 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:13:42.490 [debug] Dialling tls://ygg1.mk16.de:1338 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:13:42.513 [debug] Native router: link up 8af0a383 prio 0
+2026-09-26 16:13:42.530 [debug] Native router: link up 00000000 prio 0
+2026-09-26 16:13:42.531 [debug] Native router: link up 00000000 prio 0
+2026-09-26 16:13:42.532 [debug] Native router: link up 00000000 prio 0
+2026-09-26 16:13:42.533 [debug] Native router: link up 00000000 prio 0
+2026-09-26 16:13:42.559 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:13:42.606 [debug] Dialling tcp://bode.theender.net:42069 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:13:42.635 [debug] Dialling tls://ygg7.mk16.de:1338 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:13:42.641 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:13:42.806 [info] Connected outbound: 218:71e5:78e4:8989:b71:db7f:7bf1:f1e1@94.130.176.250:62486, source 172.27.72.173:34368
+2026-09-26 16:13:42.807 [debug] Native router: link up 000000c7 prio 0
+2026-09-26 16:13:42.812 [info] Connected outbound: 200:dc8:dec1:78fa:c0e9:bf19:a988:60fe@51.89.65.73:42069, source 172.27.72.173:40128
+2026-09-26 16:13:42.816 [debug] Native router: link up f91b909f prio 8
+2026-09-26 16:13:42.969 [info] Connected outbound: 220:f022:cd6c:22a9:5285:79e2:2e19:b66a@5.252.226.123:1338, source 172.27.72.173:53202
+2026-09-26 16:13:42.970 [debug] Native router: link up 00000000 prio 0
+2026-09-26 16:13:42.975 [info] Connected outbound: 202:afe3:a019:bf68:83e8:78da:b649:99fc@37.186.113.100:1515, source 172.27.72.173:58466
+2026-09-26 16:13:42.975 [debug] Native router: link up 2a038bfc prio 0
+2026-09-26 16:13:42.997 [info] Connected outbound: 21c:f3b0:e941:88bc:2938:a694:9012:37f2@185.175.59.174:1338, source 172.27.72.173:54546
+2026-09-26 16:13:43.002 [info] Connected outbound: 21e:aabf:6a83:d711:db93:8d3d:6131:ba4@54.38.176.219:59454, source 172.27.72.173:55558
+2026-09-26 16:13:43.003 [debug] Native router: link up 00000008 prio 0
+2026-09-26 16:13:43.011 [info] Connected outbound: 201:4132:fdf6:7db:5e49:5da9:4ec5:af35@109.176.250.101:65534, source 172.27.72.173:34838
+2026-09-26 16:13:43.015 [debug] Native router: link up 00000002 prio 0
+2026-09-26 16:13:43.017 [debug] Native router: link up 6fb34082 prio 0
+2026-09-26 16:13:44.756 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:13:47.247 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:13:47.643 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:13:48.912 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:13:49.843 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:13:54.249 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:13:54.846 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:13:57.060 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:13:58.988 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:14:03.251 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:14:03.989 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:14:12.259 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:14:13.232 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:14:16.253 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:14:17.261 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:14:33.403 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:14:37.255 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:14:38.405 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:14:42.193 [info] routing 3f82887f: root=00000000 depth=2 parent=00000000 peers=12 [00000000:p1/c185/114.3ms 00000000:p2/c186/117.7ms 00000000:p3/c191/111.8ms 00000000:p4/c181/113.1ms 8af0a383:p5/c208/118.1ms 000000c7:p6/c188/113.2ms f91b909f:p7/c189/113.5ms 00000000:p8/c172/84.9ms 2a038bfc:p9/c167/87.4ms 00000008:p10/c198/113.6ms 00000002:p11/c235/118.8ms 6fb34082:p12/c236/120.8ms] tree=20 paths=0 blooms=12 sessions=0 entries=20
+2026-09-26 16:14:42.198 [info] 
+node 3f82887f 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e: 12/16 links up
+URI                                           DIR  KEY       ADDRESS                                 STATE  UPTIME  RTT    RX         TX         PARENT/SEQ       ERROR
+tcp://109.107.177.127:65535                   out  00000000  225:124e:2a74:9966:d18d:2f19:adbf:a950  up     59s     113ms  1.2K 0B/s  652B 0B/s  00000000/207544
+tcp://146.103.111.53:65535                    out  00000000  225:7634:2b02:5ab:feb4:7404:bef7:5bec   up     59s     117ms  1.4K 0B/s  768B 0B/s  00000000/207544
+tcp://212.34.131.160:65535                    out  00000000  223:a490:c90a:c54a:b4e4:d5c:d9d6:b577   up     59s     114ms  1.4K 0B/s  1.2K 0B/s  00000000/207544
+tcp://5.252.118.13:65535                      out  8af0a383  200:ea1e:b8f8:fd1c:cc8e:3ead:9c2b:6d5f  up     59s     118ms  1.4K 0B/s  978B 0B/s  00000000/207544
+tcp://62.210.85.80:39565                      out  00000000  221:c99a:91a1:cd2c:3164:27d7:9675:bf7d  up     59s     111ms  1.5K 0B/s  895B 0B/s  00000000/207544
+tcp://bode.theender.net:42069                 out  f91b909f  200:dc8:dec1:78fa:c0e9:bf19:a988:60fe   up     59s     113ms  1.6K 0B/s  974B 0B/s  00000000/207544
+tcp://yggdrasil.su:62486                      out  000000c7  218:71e5:78e4:8989:b71:db7f:7bf1:f1e1   up     59s     113ms  1.3K 0B/s  894B 0B/s  00000000/207544
+tls://109.176.250.101:65534                   out  6fb34082  201:4132:fdf6:7db:5e49:5da9:4ec5:af35   up     59s     120ms  1.5K 0B/s  895B 0B/s  00000000/207544
+tls://37.186.113.100:1515                     out  2a038bfc  202:afe3:a019:bf68:83e8:78da:b649:99fc  up     59s     87ms   1.1K 0B/s  893B 0B/s  00000000/207544
+tls://ygg1.mk16.de:1338?key=0000000087ee9949  out  00000000  220:f022:cd6c:22a9:5285:79e2:2e19:b66a  up     59s     84ms   1.3K 0B/s  896B 0B/s  00000000/207544
+tls://ygg7.mk16.de:1338?key=000000086278b5f3  out  00000008  21c:f3b0:e941:88bc:2938:a694:9012:37f2  up     59s     113ms  1.5K 0B/s  1.1K 0B/s  00000000/207544
+tls://yggpeer.tilde.green:59454               out  00000002  21e:aabf:6a83:d711:db93:8d3d:6131:ba4   up     59s     118ms  1.6K 0B/s  978B 0B/s  00000000/207544
+tcp://89.44.86.85:65535                       out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 4s ago
+tcp://thatmaidguy.fvds.ru:7991                out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :no_suitable_ips 28s ago
+tcp://ygg6.mk16.de:1337?key=0000005e5ced06fd  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :enetunreach 28s ago
+tls://ygg.ace.ctrl-c.liu.se:9999?key=5636b3a  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 3s ago
+2026-09-26 16:14:45.388 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:15:10.552 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:15:14.263 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:15:15.554 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:15:42.193 [info] routing 3f82887f: root=00000000 depth=2 parent=00000000 peers=12 [00000000:p1/c185/114.3ms 00000000:p2/c186/117.7ms 00000000:p3/c191/111.8ms 00000000:p4/c181/113.1ms 8af0a383:p5/c208/118.1ms 000000c7:p6/c188/113.2ms f91b909f:p7/c189/113.5ms 00000000:p8/c172/84.9ms 2a038bfc:p9/c167/87.4ms 00000008:p10/c198/113.6ms 00000002:p11/c235/118.8ms 6fb34082:p12/c236/120.8ms] tree=20 paths=0 blooms=12 sessions=0 entries=20
+2026-09-26 16:15:42.198 [info] 
+node 3f82887f 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e: 12/16 links up
+URI                                           DIR  KEY       ADDRESS                                 STATE  UPTIME  RTT    RX         TX         PARENT/SEQ       ERROR
+tcp://109.107.177.127:65535                   out  00000000  225:124e:2a74:9966:d18d:2f19:adbf:a950  up     1m59s   113ms  1.2K 0B/s  652B 0B/s  00000000/207544
+tcp://146.103.111.53:65535                    out  00000000  225:7634:2b02:5ab:feb4:7404:bef7:5bec   up     1m59s   117ms  1.4K 0B/s  768B 0B/s  00000000/207544
+tcp://212.34.131.160:65535                    out  00000000  223:a490:c90a:c54a:b4e4:d5c:d9d6:b577   up     1m59s   114ms  1.4K 0B/s  1.2K 0B/s  00000000/207544
+tcp://5.252.118.13:65535                      out  8af0a383  200:ea1e:b8f8:fd1c:cc8e:3ead:9c2b:6d5f  up     1m59s   118ms  1.4K 0B/s  978B 0B/s  00000000/207544
+tcp://62.210.85.80:39565                      out  00000000  221:c99a:91a1:cd2c:3164:27d7:9675:bf7d  up     1m59s   111ms  1.5K 0B/s  895B 0B/s  00000000/207544
+tcp://bode.theender.net:42069                 out  f91b909f  200:dc8:dec1:78fa:c0e9:bf19:a988:60fe   up     1m59s   113ms  1.6K 0B/s  974B 0B/s  00000000/207544
+tcp://yggdrasil.su:62486                      out  000000c7  218:71e5:78e4:8989:b71:db7f:7bf1:f1e1   up     1m59s   113ms  1.6K 0B/s  976B 0B/s  00000000/381721
+tls://109.176.250.101:65534                   out  6fb34082  201:4132:fdf6:7db:5e49:5da9:4ec5:af35   up     1m59s   120ms  1.8K 0B/s  976B 0B/s  2aa01f58/315466
+tls://37.186.113.100:1515                     out  2a038bfc  202:afe3:a019:bf68:83e8:78da:b649:99fc  up     1m59s   87ms   1.6K 0B/s  976B 0B/s  00000000/205202
+tls://ygg1.mk16.de:1338?key=0000000087ee9949  out  00000000  220:f022:cd6c:22a9:5285:79e2:2e19:b66a  up     1m59s   84ms   1.6K 0B/s  977B 0B/s  00000000/387281
+tls://ygg7.mk16.de:1338?key=000000086278b5f3  out  00000008  21c:f3b0:e941:88bc:2938:a694:9012:37f2  up     1m59s   113ms  1.8K 0B/s  1.2K 0B/s  2aa01f58/99774
+tls://yggpeer.tilde.green:59454               out  00000002  21e:aabf:6a83:d711:db93:8d3d:6131:ba4   up     1m59s   118ms  1.6K 0B/s  978B 0B/s  00000000/207544
+tcp://89.44.86.85:65535                       out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 27s ago
+tcp://thatmaidguy.fvds.ru:7991                out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :no_suitable_ips 56s ago
+tcp://ygg6.mk16.de:1337?key=0000005e5ced06fd  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :enetunreach 56s ago
+tls://ygg.ace.ctrl-c.liu.se:9999?key=5636b3a  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 26s ago
+2026-09-26 16:15:49.611 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:16:19.701 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:16:23.274 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:16:24.704 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:16:39.726 [debug] Native router: path notify for 189669c9
+2026-09-26 16:16:40.998 [debug] IPv6 packet from 189669c9 not answered: {:icmpv6, 129, 0}
+2026-09-26 16:16:41.498 [debug] IPv6 packet from 189669c9 not answered: {:icmpv6, 129, 0}
+2026-09-26 16:16:42.194 [info] routing 3f82887f: root=00000000 depth=2 parent=00000000 peers=12 [00000000:p1/c185/114.3ms 00000000:p2/c186/117.7ms 00000000:p3/c191/111.8ms 00000000:p4/c181/113.1ms 8af0a383:p5/c208/118.1ms 000000c7:p6/c188/113.2ms f91b909f:p7/c189/113.5ms 00000000:p8/c172/84.9ms 2a038bfc:p9/c167/87.4ms 00000008:p10/c198/113.6ms 00000002:p11/c235/118.8ms 6fb34082:p12/c236/120.8ms] tree=20 paths=1 blooms=12 sessions=0 entries=20
+2026-09-26 16:16:42.199 [info] 
+node 3f82887f 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e: 12/16 links up
+URI                                           DIR  KEY       ADDRESS                                 STATE  UPTIME  RTT    RX           TX           PARENT/SEQ       ERROR
+tcp://109.107.177.127:65535                   out  00000000  225:124e:2a74:9966:d18d:2f19:adbf:a950  up     2m59s   113ms  1.9K 574B/s  725B 2B/s    00000000/207544
+tcp://146.103.111.53:65535                    out  00000000  225:7634:2b02:5ab:feb4:7404:bef7:5bec   up     2m59s   117ms  1.4K 0B/s    768B 0B/s    00000000/207544
+tcp://212.34.131.160:65535                    out  00000000  223:a490:c90a:c54a:b4e4:d5c:d9d6:b577   up     2m59s   114ms  1.4K 0B/s    1.2K 0B/s    00000000/207544
+tcp://5.252.118.13:65535                      out  8af0a383  200:ea1e:b8f8:fd1c:cc8e:3ead:9c2b:6d5f  up     2m59s   118ms  1.4K 2B/s    2.1K 884B/s  00000000/207544
+tcp://62.210.85.80:39565                      out  00000000  221:c99a:91a1:cd2c:3164:27d7:9675:bf7d  up     2m59s   111ms  1.8K 0B/s    976B 0B/s    ebf5e7f1/390595
+tcp://bode.theender.net:42069                 out  f91b909f  200:dc8:dec1:78fa:c0e9:bf19:a988:60fe   up     2m59s   113ms  1.6K 0B/s    974B 0B/s    00000000/207544
+tcp://yggdrasil.su:62486                      out  000000c7  218:71e5:78e4:8989:b71:db7f:7bf1:f1e1   up     2m59s   113ms  1.6K 0B/s    976B 0B/s    00000000/381721
+tls://109.176.250.101:65534                   out  6fb34082  201:4132:fdf6:7db:5e49:5da9:4ec5:af35   up     2m59s   120ms  1.8K 0B/s    976B 0B/s    2aa01f58/315466
+tls://37.186.113.100:1515                     out  2a038bfc  202:afe3:a019:bf68:83e8:78da:b649:99fc  up     2m59s   87ms   1.6K 0B/s    976B 0B/s    00000000/205202
+tls://ygg1.mk16.de:1338?key=0000000087ee9949  out  00000000  220:f022:cd6c:22a9:5285:79e2:2e19:b66a  up     2m59s   84ms   1.6K 0B/s    977B 0B/s    00000000/387281
+tls://ygg7.mk16.de:1338?key=000000086278b5f3  out  00000008  21c:f3b0:e941:88bc:2938:a694:9012:37f2  up     2m59s   113ms  1.8K 0B/s    1.2K 0B/s    2aa01f58/99774
+tls://yggpeer.tilde.green:59454               out  00000002  21e:aabf:6a83:d711:db93:8d3d:6131:ba4   up     2m59s   118ms  1.6K 0B/s    978B 0B/s    00000000/207544
+tcp://89.44.86.85:65535                       out  -         -                                       down   -       -      0B 0B/s      0B 0B/s      -                :timeout 18s ago
+tcp://thatmaidguy.fvds.ru:7991                out  -         -                                       down   -       -      0B 0B/s      0B 0B/s      -                :no_suitable_ips 52s ago
+tcp://ygg6.mk16.de:1337?key=0000005e5ced06fd  out  -         -                                       down   -       -      0B 0B/s      0B 0B/s      -                :enetunreach 52s ago
+tls://ygg.ace.ctrl-c.liu.se:9999?key=5636b3a  out  -         -                                       down   -       -      0B 0B/s      0B 0B/s      -                :timeout 17s ago
+2026-09-26 16:16:42.433 [debug] IPv6 packet from 189669c9 not answered: {:icmpv6, 129, 0}
+2026-09-26 16:16:43.418 [debug] IPv6 packet from 189669c9 not answered: {:icmpv6, 129, 0}
+2026-09-26 16:16:44.466 [debug] IPv6 packet from 189669c9 not answered: {:icmpv6, 129, 0}
+2026-09-26 16:16:45.451 [debug] IPv6 packet from 189669c9 not answered: {:icmpv6, 129, 0}
+2026-09-26 16:16:46.468 [debug] IPv6 packet from 189669c9 not answered: {:icmpv6, 129, 0}
+2026-09-26 16:16:47.424 [debug] IPv6 packet from 189669c9 not answered: {:icmpv6, 129, 0}
+2026-09-26 16:16:48.431 [debug] IPv6 packet from 189669c9 not answered: {:icmpv6, 129, 0}
+2026-09-26 16:16:49.596 [debug] IPv6 packet from 189669c9 not answered: {:icmpv6, 129, 0}
+2026-09-26 16:17:42.195 [info] routing 3f82887f: root=00000000 depth=2 parent=00000000 peers=12 [00000000:p1/c185/114.3ms 00000000:p2/c186/117.7ms 00000000:p3/c191/111.8ms 00000000:p4/c181/113.1ms 8af0a383:p5/c208/118.1ms 000000c7:p6/c188/113.2ms f91b909f:p7/c189/113.5ms 00000000:p8/c172/84.9ms 2a038bfc:p9/c167/87.4ms 00000008:p10/c198/113.6ms 00000002:p11/c235/118.8ms 6fb34082:p12/c236/120.8ms] tree=20 paths=1 blooms=12 sessions=0 entries=20
+2026-09-26 16:17:42.200 [info] 
+node 3f82887f 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e: 12/16 links up
+URI                                           DIR  KEY       ADDRESS                                 STATE  UPTIME  RTT    RX         TX         PARENT/SEQ       ERROR
+tcp://109.107.177.127:65535                   out  00000000  225:124e:2a74:9966:d18d:2f19:adbf:a950  up     3m59s   113ms  4.4K 0B/s  739B 0B/s  00000000/207544
+tcp://146.103.111.53:65535                    out  00000000  225:7634:2b02:5ab:feb4:7404:bef7:5bec   up     3m59s   117ms  1.4K 0B/s  768B 0B/s  00000000/207544
+tcp://212.34.131.160:65535                    out  00000000  223:a490:c90a:c54a:b4e4:d5c:d9d6:b577   up     3m59s   114ms  1.4K 0B/s  1.2K 0B/s  00000000/207544
+tcp://5.252.118.13:65535                      out  8af0a383  200:ea1e:b8f8:fd1c:cc8e:3ead:9c2b:6d5f  up     3m59s   118ms  1.4K 0B/s  4.2K 0B/s  00000000/207544
+tcp://62.210.85.80:39565                      out  00000000  221:c99a:91a1:cd2c:3164:27d7:9675:bf7d  up     3m59s   111ms  1.8K 0B/s  976B 0B/s  ebf5e7f1/390595
+tcp://bode.theender.net:42069                 out  f91b909f  200:dc8:dec1:78fa:c0e9:bf19:a988:60fe   up     3m59s   113ms  1.6K 0B/s  974B 0B/s  00000000/207544
+tcp://yggdrasil.su:62486                      out  000000c7  218:71e5:78e4:8989:b71:db7f:7bf1:f1e1   up     3m59s   113ms  1.6K 0B/s  976B 0B/s  00000000/381721
+tls://109.176.250.101:65534                   out  6fb34082  201:4132:fdf6:7db:5e49:5da9:4ec5:af35   up     3m59s   120ms  1.8K 0B/s  976B 0B/s  2aa01f58/315466
+tls://37.186.113.100:1515                     out  2a038bfc  202:afe3:a019:bf68:83e8:78da:b649:99fc  up     3m59s   87ms   1.6K 0B/s  976B 0B/s  00000000/205202
+tls://ygg1.mk16.de:1338?key=0000000087ee9949  out  00000000  220:f022:cd6c:22a9:5285:79e2:2e19:b66a  up     3m59s   84ms   1.6K 0B/s  977B 0B/s  00000000/387281
+tls://ygg7.mk16.de:1338?key=000000086278b5f3  out  00000008  21c:f3b0:e941:88bc:2938:a694:9012:37f2  up     3m59s   113ms  1.8K 0B/s  1.2K 0B/s  2aa01f58/99774
+tls://yggpeer.tilde.green:59454               out  00000002  21e:aabf:6a83:d711:db93:8d3d:6131:ba4   up     3m59s   118ms  1.6K 0B/s  978B 0B/s  00000000/207544
+tcp://89.44.86.85:65535                       out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 1m18s ago
+tcp://thatmaidguy.fvds.ru:7991                out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :no_suitable_ips 1m52s ago
+tcp://ygg6.mk16.de:1337?key=0000005e5ced06fd  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :enetunreach 1m52s ago
+tls://ygg.ace.ctrl-c.liu.se:9999?key=5636b3a  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 1m17s ago
+2026-09-26 16:17:57.782 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:56:49.196 [info] Log file: /home/dok1o/Code/Aisar_code/ms_v68/data/logs/ygg.log
+2026-09-26 16:56:49.203 [info] Key loaded: 3f82887fba34d33d1511dc23e0ba25d4e6383dd184a5a4b67d25cc74874759b4
+2026-09-26 16:56:49.203 [info] Address 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e, subnet 302:3eb:bc02:2e59::/64
+2026-09-26 16:56:49.262 [info] Address file /home/dok1o/Code/Aisar_code/ms_v68/data/ygg/ygg_address.txt: 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e 0 3f82887fba34d33d1511dc23e0ba25d4e6383dd184a5a4b67d25cc74874759b4
+2026-09-26 16:56:49.441 [debug] Dialling tls://ygg1.mk16.de:1338 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:56:49.495 [info] Connected outbound: 221:c99a:91a1:cd2c:3164:27d7:9675:bf7d@62.210.85.80:39565, source 172.27.72.173:50710
+2026-09-26 16:56:49.495 [info] Connected outbound: 200:ea1e:b8f8:fd1c:cc8e:3ead:9c2b:6d5f@5.252.118.13:65535, source 172.27.72.173:56986
+2026-09-26 16:56:49.499 [info] Connected outbound: 223:a490:c90a:c54a:b4e4:d5c:d9d6:b577@212.34.131.160:65535, source 172.27.72.173:58204
+2026-09-26 16:56:49.509 [debug] Native router: link up 8af0a383 prio 0
+2026-09-26 16:56:49.523 [debug] Dialling tls://yggpeer.tilde.green:59454 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:56:49.526 [debug] Native router: link up 00000000 prio 0
+2026-09-26 16:56:49.526 [info] Connected outbound: 225:7634:2b02:5ab:feb4:7404:bef7:5bec@146.103.111.53:65535, source 172.27.72.173:33868
+2026-09-26 16:56:49.527 [debug] Native router: link up 00000000 prio 0
+2026-09-26 16:56:49.528 [info] Connected outbound: 225:124e:2a74:9966:d18d:2f19:adbf:a950@109.107.177.127:65535, source 172.27.72.173:54210
+2026-09-26 16:56:49.530 [debug] Native router: link up 00000000 prio 0
+2026-09-26 16:56:49.531 [debug] Native router: link up 00000000 prio 0
+2026-09-26 16:56:49.610 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:56:49.685 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:56:49.691 [debug] Dialling tcp://bode.theender.net:42069 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:56:49.705 [debug] Dialling tls://ygg7.mk16.de:1338 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:56:49.741 [info] Connected outbound: 218:71e5:78e4:8989:b71:db7f:7bf1:f1e1@94.130.176.250:62486, source 172.27.72.173:60576
+2026-09-26 16:56:49.742 [debug] Native router: link up 000000c7 prio 0
+2026-09-26 16:56:49.778 [info] Connected outbound: 220:f022:cd6c:22a9:5285:79e2:2e19:b66a@5.252.226.123:1338, source 172.27.72.173:60800
+2026-09-26 16:56:49.778 [debug] Native router: link up 00000000 prio 0
+2026-09-26 16:56:49.810 [info] Connected outbound: 201:4132:fdf6:7db:5e49:5da9:4ec5:af35@109.176.250.101:65534, source 172.27.72.173:47054
+2026-09-26 16:56:49.810 [debug] Native router: link up 6fb34082 prio 0
+2026-09-26 16:56:49.886 [info] Connected outbound: 21e:aabf:6a83:d711:db93:8d3d:6131:ba4@54.38.176.219:59454, source 172.27.72.173:41162
+2026-09-26 16:56:49.887 [debug] Native router: link up 00000002 prio 0
+2026-09-26 16:56:49.901 [info] Connected outbound: 200:dc8:dec1:78fa:c0e9:bf19:a988:60fe@51.89.65.73:42069, source 172.27.72.173:47410
+2026-09-26 16:56:49.901 [debug] Native router: link up f91b909f prio 8
+2026-09-26 16:56:50.027 [info] Connected outbound: 21c:f3b0:e941:88bc:2938:a694:9012:37f2@185.175.59.174:1338, source 172.27.72.173:36000
+2026-09-26 16:56:50.028 [debug] Native router: link up 00000008 prio 0
+2026-09-26 16:56:50.167 [info] Connected outbound: 202:afe3:a019:bf68:83e8:78da:b649:99fc@37.186.113.100:1515, source 172.27.72.173:46340
+2026-09-26 16:56:50.168 [debug] Native router: link up 2a038bfc prio 0
+2026-09-26 16:56:51.833 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:56:54.288 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:56:54.612 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:56:56.299 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:56:56.857 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:57:01.295 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:57:01.861 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:57:10.298 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:57:13.167 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:57:18.170 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:57:23.301 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:57:26.375 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:57:29.775 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:57:31.378 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:57:44.305 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:57:47.580 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:57:49.256 [info] routing 3f82887f: root=00000000 depth=2 parent=8af0a383 peers=12 [8af0a383:p1/c185/106.4ms 00000000:p2/c187/107.2ms 00000000:p3/c196/117.7ms 00000000:p4/c244/118.6ms 00000000:p5/c245/128.2ms 000000c7:p6/c191/116.9ms 00000000:p7/c160/92.2ms 6fb34082:p8/c221/128.9ms 00000002:p9/c230/143.3ms f91b909f:p10/c184/106.7ms 00000008:p11/c201/117.4ms 2a038bfc:p12/c1169/584.6ms] tree=21 paths=0 blooms=12 sessions=0 entries=21
+2026-09-26 16:57:49.262 [info] 
+node 3f82887f 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e: 12/16 links up
+URI                                           DIR  KEY       ADDRESS                                 STATE       UPTIME  RTT    RX         TX         PARENT/SEQ       ERROR
+tcp://109.107.177.127:65535                   out  00000000  225:124e:2a74:9966:d18d:2f19:adbf:a950  up          59s     128ms  746B 0B/s  681B 0B/s  00000000/125691
+tcp://146.103.111.53:65535                    out  00000000  225:7634:2b02:5ab:feb4:7404:bef7:5bec   up          59s     118ms  744B 0B/s  682B 0B/s  00000000/134466
+tcp://212.34.131.160:65535                    out  00000000  223:a490:c90a:c54a:b4e4:d5c:d9d6:b577   up          59s     117ms  748B 0B/s  681B 0B/s  00000000/25798
+tcp://5.252.118.13:65535                      out  8af0a383  200:ea1e:b8f8:fd1c:cc8e:3ead:9c2b:6d5f  up          59s     106ms  781B 0B/s  570B 0B/s  00000000/20644
+tcp://62.210.85.80:39565                      out  00000000  221:c99a:91a1:cd2c:3164:27d7:9675:bf7d  up          59s     107ms  957B 0B/s  683B 0B/s  ebf5e7f1/390605
+tcp://bode.theender.net:42069                 out  f91b909f  200:dc8:dec1:78fa:c0e9:bf19:a988:60fe   up          59s     106ms  954B 0B/s  889B 0B/s  000000c9/387784
+tcp://yggdrasil.su:62486                      out  000000c7  218:71e5:78e4:8989:b71:db7f:7bf1:f1e1   up          59s     116ms  959B 0B/s  683B 0B/s  33082dfb/381731
+tls://109.176.250.101:65534                   out  6fb34082  201:4132:fdf6:7db:5e49:5da9:4ec5:af35   up          59s     128ms  745B 0B/s  890B 0B/s  2aa01f58/315476
+tls://37.186.113.100:1515                     out  2a038bfc  202:afe3:a019:bf68:83e8:78da:b649:99fc  up          59s     584ms  954B 0B/s  890B 0B/s  fba015ea/319495
+tls://ygg1.mk16.de:1338?key=0000000087ee9949  out  00000000  220:f022:cd6c:22a9:5285:79e2:2e19:b66a  up          59s     92ms   746B 0B/s  890B 0B/s  208aaeb9/387291
+tls://ygg7.mk16.de:1338?key=000000086278b5f3  out  00000008  21c:f3b0:e941:88bc:2938:a694:9012:37f2  up          59s     117ms  744B 0B/s  889B 0B/s  2aa01f58/99784
+tls://yggpeer.tilde.green:59454               out  00000002  21e:aabf:6a83:d711:db93:8d3d:6131:ba4   up          59s     143ms  744B 0B/s  889B 0B/s  3e66bfe0/269181
+tcp://89.44.86.85:65535                       out  -         -                                       down        -       -      0B 0B/s    0B 0B/s    -                :timeout 4s ago
+tcp://thatmaidguy.fvds.ru:7991                out  -         -                                       down        -       -      0B 0B/s    0B 0B/s    -                :no_suitable_ips 19s ago
+tcp://ygg6.mk16.de:1337?key=0000005e5ced06fd  out  -         -                                       down        -       -      0B 0B/s    0B 0B/s    -                :enetunreach 19s ago
+tls://ygg.ace.ctrl-c.liu.se:9999?key=5636b3a  out  -         -                                       connecting  -       -      0B 0B/s    0B 0B/s    -                :timeout 17s ago
+2026-09-26 16:57:50.200 [debug] Native router: path notify for 8ae4099b
+2026-09-26 16:57:52.582 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:58:02.053 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:58:21.316 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:58:24.774 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:58:29.776 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:58:49.277 [info] 
+node 3f82887f 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e: 12/16 links up
+URI                                           DIR  KEY       ADDRESS                                 STATE  UPTIME  RTT    RX         TX         PARENT/SEQ       ERROR
+tcp://109.107.177.127:65535                   out  00000000  225:124e:2a74:9966:d18d:2f19:adbf:a950  up     1m59s   128ms  1.2K 0B/s  975B 0B/s  00000000/207555
+tcp://146.103.111.53:65535                    out  00000000  225:7634:2b02:5ab:feb4:7404:bef7:5bec   up     1m59s   118ms  1.2K 0B/s  1.2K 0B/s  00000000/20645
+tcp://212.34.131.160:65535                    out  00000000  223:a490:c90a:c54a:b4e4:d5c:d9d6:b577   up     1m59s   117ms  978B 0B/s  1.2K 0B/s  00000000/25799
+tcp://5.252.118.13:65535                      out  8af0a383  200:ea1e:b8f8:fd1c:cc8e:3ead:9c2b:6d5f  up     1m59s   106ms  2.2K 0B/s  1.5K 0B/s  00000000/207555
+tcp://62.210.85.80:39565                      out  00000000  221:c99a:91a1:cd2c:3164:27d7:9675:bf7d  up     1m59s   107ms  1.1K 0B/s  1.1K 0B/s  00000000/133278
+tcp://bode.theender.net:42069                 out  f91b909f  200:dc8:dec1:78fa:c0e9:bf19:a988:60fe   up     1m59s   106ms  1.4K 0B/s  1.4K 0B/s  000000c9/387785
+tcp://yggdrasil.su:62486                      out  000000c7  218:71e5:78e4:8989:b71:db7f:7bf1:f1e1   up     1m59s   116ms  1.1K 0B/s  1.1K 0B/s  00000000/63958
+tls://109.176.250.101:65534                   out  6fb34082  201:4132:fdf6:7db:5e49:5da9:4ec5:af35   up     1m59s   128ms  1.1K 0B/s  1.1K 0B/s  00000000/207555
+tls://37.186.113.100:1515                     out  2a038bfc  202:afe3:a019:bf68:83e8:78da:b649:99fc  up     1m59s   584ms  1.3K 0B/s  1.1K 0B/s  00000000/207555
+tls://ygg1.mk16.de:1338?key=0000000087ee9949  out  00000000  220:f022:cd6c:22a9:5285:79e2:2e19:b66a  up     1m59s   92ms   1.1K 0B/s  1.3K 0B/s  00000000/20645
+tls://ygg7.mk16.de:1338?key=000000086278b5f3  out  00000008  21c:f3b0:e941:88bc:2938:a694:9012:37f2  up     1m59s   117ms  1.1K 0B/s  1.1K 0B/s  00000000/207555
+tls://yggpeer.tilde.green:59454               out  00000002  21e:aabf:6a83:d711:db93:8d3d:6131:ba4   up     1m59s   143ms  1.4K 0B/s  1.2K 0B/s  00000000/207555
+tcp://89.44.86.85:65535                       out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 27s ago
+tcp://thatmaidguy.fvds.ru:7991                out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :no_suitable_ips 47s ago
+tcp://ygg6.mk16.de:1337?key=0000005e5ced06fd  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :enetunreach 47s ago
+tls://ygg.ace.ctrl-c.liu.se:9999?key=5636b3a  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 19s ago
+2026-09-26 16:58:49.282 [info] routing 3f82887f: root=00000000 depth=2 parent=8af0a383 peers=12 [8af0a383:p1/c185/106.4ms 00000000:p2/c187/107.2ms 00000000:p3/c196/117.7ms 00000000:p4/c244/118.6ms 00000000:p5/c245/128.2ms 000000c7:p6/c191/116.9ms 00000000:p7/c160/92.2ms 6fb34082:p8/c221/128.9ms 00000002:p9/c230/143.3ms f91b909f:p10/c184/106.7ms 00000008:p11/c201/117.4ms 2a038bfc:p12/c1169/584.6ms] tree=21 paths=1 blooms=12 sessions=0 entries=21
+2026-09-26 16:59:06.234 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:59:30.318 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 16:59:34.010 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 16:59:39.012 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 16:59:49.265 [info] 
+node 3f82887f 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e: 12/16 links up
+URI                                           DIR  KEY       ADDRESS                                 STATE  UPTIME  RTT    RX         TX         PARENT/SEQ       ERROR
+tcp://109.107.177.127:65535                   out  00000000  225:124e:2a74:9966:d18d:2f19:adbf:a950  up     2m59s   128ms  1.2K 0B/s  975B 0B/s  00000000/207555
+tcp://146.103.111.53:65535                    out  00000000  225:7634:2b02:5ab:feb4:7404:bef7:5bec   up     2m59s   118ms  1.2K 0B/s  1.2K 0B/s  00000000/20645
+tcp://212.34.131.160:65535                    out  00000000  223:a490:c90a:c54a:b4e4:d5c:d9d6:b577   up     2m59s   117ms  978B 0B/s  1.2K 0B/s  00000000/25799
+tcp://5.252.118.13:65535                      out  8af0a383  200:ea1e:b8f8:fd1c:cc8e:3ead:9c2b:6d5f  up     2m59s   106ms  2.2K 0B/s  1.5K 0B/s  00000000/207555
+tcp://62.210.85.80:39565                      out  00000000  221:c99a:91a1:cd2c:3164:27d7:9675:bf7d  up     2m59s   107ms  1.1K 0B/s  1.1K 0B/s  00000000/133278
+tcp://bode.theender.net:42069                 out  f91b909f  200:dc8:dec1:78fa:c0e9:bf19:a988:60fe   up     2m59s   106ms  1.4K 0B/s  1.4K 0B/s  000000c9/387785
+tcp://yggdrasil.su:62486                      out  000000c7  218:71e5:78e4:8989:b71:db7f:7bf1:f1e1   up     2m59s   116ms  1.6K 0B/s  1.2K 0B/s  00ffbdff/381732
+tls://109.176.250.101:65534                   out  6fb34082  201:4132:fdf6:7db:5e49:5da9:4ec5:af35   up     2m59s   128ms  1.4K 0B/s  1.2K 0B/s  2aa01f58/315477
+tls://37.186.113.100:1515                     out  2a038bfc  202:afe3:a019:bf68:83e8:78da:b649:99fc  up     2m59s   584ms  1.3K 0B/s  1.1K 0B/s  00000000/207555
+tls://ygg1.mk16.de:1338?key=0000000087ee9949  out  00000000  220:f022:cd6c:22a9:5285:79e2:2e19:b66a  up     2m59s   92ms   1.4K 0B/s  1.4K 0B/s  208aaeb9/387292
+tls://ygg7.mk16.de:1338?key=000000086278b5f3  out  00000008  21c:f3b0:e941:88bc:2938:a694:9012:37f2  up     2m59s   117ms  1.4K 0B/s  1.2K 0B/s  2aa01f58/99785
+tls://yggpeer.tilde.green:59454               out  00000002  21e:aabf:6a83:d711:db93:8d3d:6131:ba4   up     2m59s   143ms  1.4K 0B/s  1.2K 0B/s  00000000/207555
+tcp://89.44.86.85:65535                       out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 18s ago
+tcp://thatmaidguy.fvds.ru:7991                out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :no_suitable_ips 43s ago
+tcp://ygg6.mk16.de:1337?key=0000005e5ced06fd  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :enetunreach 43s ago
+tls://ygg.ace.ctrl-c.liu.se:9999?key=5636b3a  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 10s ago
+2026-09-26 16:59:49.267 [info] routing 3f82887f: root=00000000 depth=2 parent=8af0a383 peers=12 [8af0a383:p1/c185/106.4ms 00000000:p2/c187/107.2ms 00000000:p3/c196/117.7ms 00000000:p4/c244/118.6ms 00000000:p5/c245/128.2ms 000000c7:p6/c191/116.9ms 00000000:p7/c160/92.2ms 6fb34082:p8/c221/128.9ms 00000002:p9/c230/143.3ms f91b909f:p10/c184/106.7ms 00000008:p11/c201/117.4ms 2a038bfc:p12/c1169/584.6ms] tree=22 paths=0 blooms=12 sessions=0 entries=22
+2026-09-26 17:00:49.264 [info] routing 3f82887f: root=00000000 depth=6 parent=8af0a383 peers=12 [8af0a383:p1/c185/106.4ms 00000000:p2/c187/107.2ms 00000000:p3/c196/117.7ms 00000000:p4/c244/118.6ms 00000000:p5/c245/128.2ms 000000c7:p6/c191/116.9ms 00000000:p7/c160/92.2ms 6fb34082:p8/c221/128.9ms 00000002:p9/c230/143.3ms f91b909f:p10/c184/106.7ms 00000008:p11/c201/117.4ms 2a038bfc:p12/c1169/584.6ms] tree=35 paths=0 blooms=12 sessions=0 entries=35
+2026-09-26 17:00:49.265 [info] 
+node 3f82887f 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e: 12/16 links up
+URI                                           DIR  KEY       ADDRESS                                 STATE  UPTIME  RTT    RX         TX         PARENT/SEQ       ERROR
+tcp://109.107.177.127:65535                   out  00000000  225:124e:2a74:9966:d18d:2f19:adbf:a950  up     3m59s   128ms  2.0K 0B/s  1.8K 0B/s  87b2a2d1/125693
+tcp://146.103.111.53:65535                    out  00000000  225:7634:2b02:5ab:feb4:7404:bef7:5bec   up     3m59s   118ms  1.4K 0B/s  2.7K 0B/s  87b2a2d1/134468
+tcp://212.34.131.160:65535                    out  00000000  223:a490:c90a:c54a:b4e4:d5c:d9d6:b577   up     3m59s   117ms  1.2K 0B/s  2.7K 0B/s  87b2a2d1/25800
+tcp://5.252.118.13:65535                      out  8af0a383  200:ea1e:b8f8:fd1c:cc8e:3ead:9c2b:6d5f  up     3m59s   106ms  3.8K 0B/s  2.8K 0B/s  000000c9/27872
+tcp://62.210.85.80:39565                      out  00000000  221:c99a:91a1:cd2c:3164:27d7:9675:bf7d  up     3m59s   107ms  4.0K 0B/s  2.0K 0B/s  95440525/390606
+tcp://bode.theender.net:42069                 out  f91b909f  200:dc8:dec1:78fa:c0e9:bf19:a988:60fe   up     3m59s   106ms  2.8K 0B/s  1.8K 0B/s  000000c9/27872
+tcp://yggdrasil.su:62486                      out  000000c7  218:71e5:78e4:8989:b71:db7f:7bf1:f1e1   up     3m59s   116ms  3.0K 0B/s  1.6K 0B/s  142c39da/135060
+tls://109.176.250.101:65534                   out  6fb34082  201:4132:fdf6:7db:5e49:5da9:4ec5:af35   up     3m59s   128ms  3.4K 0B/s  1.2K 0B/s  000000c9/27872
+tls://37.186.113.100:1515                     out  2a038bfc  202:afe3:a019:bf68:83e8:78da:b649:99fc  up     3m59s   584ms  2.2K 2B/s  2.8K 2B/s  c2d3c7db/319496
+tls://ygg1.mk16.de:1338?key=0000000087ee9949  out  00000000  220:f022:cd6c:22a9:5285:79e2:2e19:b66a  up     3m59s   92ms   2.8K 0B/s  1.8K 0B/s  142c39da/135060
+tls://ygg7.mk16.de:1338?key=000000086278b5f3  out  00000008  21c:f3b0:e941:88bc:2938:a694:9012:37f2  up     3m59s   117ms  3.4K 0B/s  1.2K 0B/s  000000c9/27872
+tls://yggpeer.tilde.green:59454               out  00000002  21e:aabf:6a83:d711:db93:8d3d:6131:ba4   up     3m59s   143ms  2.6K 0B/s  2.0K 0B/s  87b2a2d1/25800
+tcp://89.44.86.85:65535                       out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 1m18s ago
+tcp://thatmaidguy.fvds.ru:7991                out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :no_suitable_ips 1m43s ago
+tcp://ygg6.mk16.de:1337?key=0000005e5ced06fd  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :enetunreach 1m43s ago
+tls://ygg.ace.ctrl-c.liu.se:9999?key=5636b3a  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 1m10s ago
+2026-09-26 17:01:14.486 [debug] Dialling tcp://ygg6.mk16.de:1337 reported error: {:shutdown, :enetunreach}
+2026-09-26 17:01:43.323 [debug] Dialling tcp://89.44.86.85:65535 reported error: {:shutdown, :timeout}
+2026-09-26 17:01:47.174 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :enetunreach}
+2026-09-26 17:01:49.267 [info] 
+node 3f82887f 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e: 12/16 links up
+URI                                           DIR  KEY       ADDRESS                                 STATE       UPTIME  RTT    RX         TX         PARENT/SEQ       ERROR
+tcp://109.107.177.127:65535                   out  00000000  225:124e:2a74:9966:d18d:2f19:adbf:a950  up          4m59s   197ms  2.1K 0B/s  2.7K 0B/s  87b2a2d1/125693
+tcp://146.103.111.53:65535                    out  00000000  225:7634:2b02:5ab:feb4:7404:bef7:5bec   up          4m59s   195ms  1.5K 0B/s  3.5K 0B/s  87b2a2d1/134468
+tcp://212.34.131.160:65535                    out  00000000  223:a490:c90a:c54a:b4e4:d5c:d9d6:b577   up          4m59s   162ms  1.3K 0B/s  3.5K 0B/s  87b2a2d1/25800
+tcp://5.252.118.13:65535                      out  8af0a383  200:ea1e:b8f8:fd1c:cc8e:3ead:9c2b:6d5f  up          4m59s   94ms   3.9K 0B/s  3.7K 0B/s  000000c9/27872
+tcp://62.210.85.80:39565                      out  00000000  221:c99a:91a1:cd2c:3164:27d7:9675:bf7d  up          4m59s   103ms  4.1K 0B/s  2.5K 0B/s  95440525/390606
+tcp://bode.theender.net:42069                 out  f91b909f  200:dc8:dec1:78fa:c0e9:bf19:a988:60fe   up          4m59s   198ms  3.1K 0B/s  2.6K 0B/s  00000000/3314
+tcp://yggdrasil.su:62486                      out  000000c7  218:71e5:78e4:8989:b71:db7f:7bf1:f1e1   up          4m59s   182ms  3.3K 0B/s  2.4K 0B/s  00000000/3314
+tls://109.176.250.101:65534                   out  6fb34082  201:4132:fdf6:7db:5e49:5da9:4ec5:af35   up          4m59s   180ms  3.7K 0B/s  2.0K 0B/s  00000000/3314
+tls://37.186.113.100:1515                     out  2a038bfc  202:afe3:a019:bf68:83e8:78da:b649:99fc  up          4m59s   88ms   2.3K 0B/s  3.6K 0B/s  c2d3c7db/319496
+tls://ygg1.mk16.de:1338?key=0000000087ee9949  out  00000000  220:f022:cd6c:22a9:5285:79e2:2e19:b66a  up          4m59s   84ms   3.1K 0B/s  2.6K 0B/s  00000000/3314
+tls://ygg7.mk16.de:1338?key=000000086278b5f3  out  00000008  21c:f3b0:e941:88bc:2938:a694:9012:37f2  up          4m59s   105ms  3.7K 0B/s  1.8K 0B/s  00000000/3314
+tls://yggpeer.tilde.green:59454               out  00000002  21e:aabf:6a83:d711:db93:8d3d:6131:ba4   up          4m59s   176ms  2.7K 0B/s  2.8K 0B/s  87b2a2d1/25800
+tcp://89.44.86.85:65535                       out  -         -                                       down        -       -      0B 0B/s    0B 0B/s    -                :timeout 5s ago
+tcp://thatmaidguy.fvds.ru:7991                out  -         -                                       down        -       -      0B 0B/s    0B 0B/s    -                :no_suitable_ips 35s ago
+tcp://ygg6.mk16.de:1337?key=0000005e5ced06fd  out  -         -                                       down        -       -      0B 0B/s    0B 0B/s    -                :enetunreach 34s ago
+tls://ygg.ace.ctrl-c.liu.se:9999?key=5636b3a  out  -         -                                       connecting  -       -      0B 0B/s    0B 0B/s    -                :timeout 2m10s ago
+2026-09-26 17:01:49.267 [info] routing 3f82887f: root=00000000 depth=3 parent=00000000 peers=12 [8af0a383:p1/c173/94.7ms 00000000:p2/c177/103.6ms 00000000:p3/c192/162.9ms 00000000:p4/c238/195.8ms 00000000:p5/c239/198.0ms 000000c7:p6/c190/182.9ms 00000000:p7/c150/84.4ms 6fb34082:p8/c216/180.9ms 00000002:p9/c223/176.1ms f91b909f:p10/c185/198.1ms 00000008:p11/c189/105.6ms 2a038bfc:p12/c1034/88.3ms] tree=35 paths=0 blooms=12 sessions=0 entries=35
+2026-09-26 17:01:52.179 [debug] Dialling tls://ygg.ace.ctrl-c.liu.se:9999 reported error: {:shutdown, :timeout}
+2026-09-26 17:02:49.269 [info] routing 3f82887f: root=00000000 depth=3 parent=00000000 peers=12 [8af0a383:p1/c173/94.7ms 00000000:p2/c177/103.6ms 00000000:p3/c192/162.9ms 00000000:p4/c238/195.8ms 00000000:p5/c239/198.0ms 000000c7:p6/c190/182.9ms 00000000:p7/c150/84.4ms 6fb34082:p8/c216/180.9ms 00000002:p9/c223/176.1ms f91b909f:p10/c185/198.1ms 00000008:p11/c189/105.6ms 2a038bfc:p12/c1034/88.3ms] tree=36 paths=0 blooms=12 sessions=0 entries=36
+2026-09-26 17:02:49.269 [info] 
+node 3f82887f 202:3eb:bc02:2e59:6617:5771:1ee0:fa2e: 12/16 links up
+URI                                           DIR  KEY       ADDRESS                                 STATE  UPTIME  RTT    RX         TX         PARENT/SEQ       ERROR
+tcp://109.107.177.127:65535                   out  00000000  225:124e:2a74:9966:d18d:2f19:adbf:a950  up     5m59s   197ms  2.1K 0B/s  2.7K 0B/s  87b2a2d1/125693
+tcp://146.103.111.53:65535                    out  00000000  225:7634:2b02:5ab:feb4:7404:bef7:5bec   up     5m59s   195ms  1.5K 0B/s  3.5K 0B/s  87b2a2d1/134468
+tcp://212.34.131.160:65535                    out  00000000  223:a490:c90a:c54a:b4e4:d5c:d9d6:b577   up     5m59s   162ms  1.3K 0B/s  3.5K 0B/s  87b2a2d1/25800
+tcp://5.252.118.13:65535                      out  8af0a383  200:ea1e:b8f8:fd1c:cc8e:3ead:9c2b:6d5f  up     5m59s   94ms   3.9K 0B/s  3.7K 0B/s  000000c9/27872
+tcp://62.210.85.80:39565                      out  00000000  221:c99a:91a1:cd2c:3164:27d7:9675:bf7d  up     5m59s   103ms  4.1K 0B/s  2.5K 0B/s  95440525/390606
+tcp://bode.theender.net:42069                 out  f91b909f  200:dc8:dec1:78fa:c0e9:bf19:a988:60fe   up     5m59s   198ms  3.3K 0B/s  2.7K 0B/s  000000c9/387786
+tcp://yggdrasil.su:62486                      out  000000c7  218:71e5:78e4:8989:b71:db7f:7bf1:f1e1   up     5m59s   182ms  3.5K 0B/s  2.4K 0B/s  00000000/143367
+tls://109.176.250.101:65534                   out  6fb34082  201:4132:fdf6:7db:5e49:5da9:4ec5:af35   up     5m59s   180ms  3.7K 0B/s  2.0K 0B/s  00000000/3314
+tls://37.186.113.100:1515                     out  2a038bfc  202:afe3:a019:bf68:83e8:78da:b649:99fc  up     5m59s   88ms   2.3K 0B/s  3.6K 0B/s  c2d3c7db/319496
+tls://ygg1.mk16.de:1338?key=0000000087ee9949  out  00000000  220:f022:cd6c:22a9:5285:79e2:2e19:b66a  up     5m59s   84ms   3.1K 0B/s  2.6K 0B/s  00000000/3314
+tls://ygg7.mk16.de:1338?key=000000086278b5f3  out  00000008  21c:f3b0:e941:88bc:2938:a694:9012:37f2  up     5m59s   105ms  3.7K 0B/s  1.8K 0B/s  00000000/3314
+tls://yggpeer.tilde.green:59454               out  00000002  21e:aabf:6a83:d711:db93:8d3d:6131:ba4   up     5m59s   176ms  3.3K 0B/s  2.9K 0B/s  00000000/8229
+tcp://89.44.86.85:65535                       out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 1m5s ago
+tcp://thatmaidguy.fvds.ru:7991                out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :no_suitable_ips 1m35s ago
+tcp://ygg6.mk16.de:1337?key=0000005e5ced06fd  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :enetunreach 1m34s ago
+tls://ygg.ace.ctrl-c.liu.se:9999?key=5636b3a  out  -         -                                       down   -       -      0B 0B/s    0B 0B/s    -                :timeout 57s ago
+2026-09-26 17:03:30.043 [debug] Native router: link down 00000000 prio 0

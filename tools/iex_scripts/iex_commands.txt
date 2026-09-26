@@ -1,0 +1,5 @@
+rand NodeManager
+{cid, pid} = Registry.select(DHT.Registry, [{{{:node_registry, :"$1"}, :"$2", :_}, [], [{{:"$1", :"$2"}}]}]) |> Enum.random()
+
+Process:
+:erlang.process_info(pid, :message_queue_len)

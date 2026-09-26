@@ -1,0 +1,324 @@
+defmodule YieldRotationSim do
+  @moduledoc """
+  Simulates the rotation of yielding nodes through the SampleCoordinator pipeline.
+
+  Lifecycle tracked:
+    1. sampling_nodes/1 picks targets (top16 + hot yielding + random DHT nodes)
+    2. Responses arrive → yielding_nodes table updated with {nodev4, fresh_count, last_ts}
+    3. cleanup_expired/0 prunes nodes older than @yielding_ttl_s
+    4. rebuild_top16/0 promotes nodes with fresh >= @top16_min into top16
+    5. Next tick: sampling_nodes sees new top16, picks new mix → rotation continues
+  """
+
+  @ets_yielding :sim_yielding_nodes
+  @ets_top16    :sim_top16
+  @ets_node_rev :sim_node_rev
+
+  @yielding_ttl_s 20
+  @top16_min       5
+  @top16_max      16
+  @score_new       0
+  @score_best      2
+
+  # ── Helpers ──────────────────────────────────────────────────────────
+
+  defp make_node(id), do: <<10, 0, 0, id, 6881::16>>
+  defp node_label(<<_a, _b, _c, d, port::16>>), do: "N#{d}:#{port}"
+
+  defp make_rid(id) do
+    :crypto.hash(:sha, "node-#{id}")
+  end
+
+  # ── Table setup / teardown ──────────────────────────────────────────
+
+  defp setup do
+    for t <- [@ets_yielding, @ets_top16, @ets_node_rev] do
+      if :ets.whereis(t) != :undefined, do: :ets.delete(t)
+    end
+
+    :ets.new(@ets_yielding, [:named_table, :set, :public])
+    :ets.new(@ets_top16,    [:named_table, :set, :public])
+    :ets.new(@ets_node_rev, [:named_table, :ordered_set, :public])
+  end
+
+  defp teardown do
+    for t <- [@ets_yielding, @ets_top16, @ets_node_rev] do
+      if :ets.whereis(t) != :undefined, do: :ets.delete(t)
+    end
+  end
+
+  defp seed_random_dht_nodes(count) do
+    for i <- 1..count do
+      nv4 = make_node(i)
+      rid = make_rid(i)
+      :ets.insert(@ets_node_rev, {nv4, rid, @score_new})
+    end
+  end
+
+  # ── Core logic (mirrors SampleCoordinator / ETSLookup) ─────────────
+
+  @doc """
+  Mirrors `process_samples` in SampleCoordinator.
+  Each response is {nodev4, fresh_ih_count}.
+  Updates the yielding_nodes ETS table.
+  """
+  defp ingest_responses(responses, now_s) do
+    Enum.each(responses, fn {nodev4, fresh_count} ->
+      case :ets.lookup(@ets_yielding, nodev4) do
+        [] ->
+          if fresh_count > 0 do
+            :ets.insert(@ets_yielding, {nodev4, fresh_count, now_s})
+          end
+
+        [{^nodev4, old_fresh, _old_ts}] ->
+          new_fresh = old_fresh + fresh_count
+          new_ts = if fresh_count > 0, do: now_s, else: 0
+          :ets.insert(@ets_yielding, {nodev4, new_fresh, new_ts})
+      end
+    end)
+  end
+
+  @doc "Mirrors `cleanup_expired` — removes yielding nodes past TTL."
+  defp cleanup_expired(now_s) do
+    cutoff = now_s - @yielding_ttl_s
+
+    :ets.select_delete(@ets_yielding, [
+      {{:_, :_, :"$3"}, [{:<, :"$3", cutoff}], [true]}
+    ])
+  end
+
+  @doc "Mirrors `rebuild_top16` — selects top yielding nodes by fresh count."
+  defp rebuild_top16(now_s) do
+    cutoff = now_s - @yielding_ttl_s
+
+    top =
+      :ets.foldl(
+        fn {nodev4, fresh, last_ts}, acc ->
+          if fresh >= @top16_min and last_ts >= cutoff do
+            [{fresh, nodev4} | acc]
+          else
+            acc
+          end
+        end,
+        [],
+        @ets_yielding
+      )
+      |> Enum.sort_by(&elem(&1, 0), :desc)
+      |> Enum.take(@top16_max)
+      |> Enum.map(fn {_fresh, nodev4} -> {nodev4} end)
+
+    :ets.delete_all_objects(@ets_top16)
+    if top != [], do: :ets.insert(@ets_top16, top)
+  end
+
+  @doc """
+  Mirrors `ETSLookup.sampling_nodes/1`.
+  Mixes: random hot yielding + random DHT nodes + all top16 nodes.
+  """
+  defp sampling_nodes(count, now_s) do
+    cutoff = now_s - @yielding_ttl_s
+
+    # Top16 always included
+    top_nodes =
+      :ets.tab2list(@ets_top16)
+      |> Enum.map(fn {nv4} -> nv4 end)
+
+    top_set = MapSet.new(top_nodes)
+
+    # Hot = yielding nodes still within TTL
+    match_spec = [{{:"$1", :_, :"$3"}, [{:>=, :"$3", cutoff}], [:"$1"]}]
+    hot = :ets.select(@ets_yielding, match_spec)
+
+    min_random_slots = max(div(count, 4), 2)
+    hot_slots = max(count - min_random_slots, 0)
+
+    random_hot =
+      hot
+      |> Enum.reject(&MapSet.member?(top_set, &1))
+      |> Enum.take_random(min(length(hot), hot_slots))
+
+    hot_set = MapSet.new(random_hot)
+    needed_random = count - length(random_hot)
+
+    # Random DHT nodes from node_rev
+    random_dht =
+      :ets.tab2list(@ets_node_rev)
+      |> Enum.map(fn {nv4, _rid, _score} -> nv4 end)
+      |> Enum.reject(&MapSet.member?(hot_set, &1))
+      |> Enum.take_random(needed_random)
+
+    random_hot ++ random_dht ++ top_nodes
+  end
+
+  # ── Scoring ─────────────────────────────────────────────────────────
+
+  defp maybe_increase_score(nodev4) do
+    case :ets.lookup(@ets_node_rev, nodev4) do
+      [{^nodev4, rid, score}] when score < @score_best ->
+        :ets.insert(@ets_node_rev, {nodev4, rid, min(score + 1, @score_best)})
+      _ ->
+        :ok
+    end
+  end
+
+  # ── Printing ────────────────────────────────────────────────────────
+
+  defp print_state(selected, label \\ "") do
+    yielding =
+      :ets.tab2list(@ets_yielding)
+      |> Enum.sort_by(fn {_, fresh, _} -> -fresh end)
+
+    top16 =
+      :ets.tab2list(@ets_top16)
+      |> Enum.map(fn {nv4} -> nv4 end)
+
+    IO.puts("  Yielding nodes (#{length(yielding)}):")
+
+    Enum.each(yielding, fn {nv4, fresh, ts} ->
+      in_top? = if nv4 in top16, do: " ★top16", else: ""
+      IO.puts("    #{node_label(nv4)}  fresh=#{fresh}  last_ts=#{ts}#{in_top?}")
+    end)
+
+    IO.puts("  Top16: #{Enum.map(top16, &node_label/1) |> Enum.join(", ")}")
+
+    selected_labels =
+      selected
+      |> Enum.uniq()
+      |> Enum.map(fn nv4 ->
+        in_top? = if nv4 in top16, do: "★", else: ""
+        in_yld? =
+          case :ets.lookup(@ets_yielding, nv4) do
+            [{_, f, _}] -> "(y#{f})"
+            [] -> ""
+          end
+        "#{in_top?}#{node_label(nv4)}#{in_yld?}"
+      end)
+
+    IO.puts("  Selected for next query (#{length(selected_labels)}): #{Enum.join(selected_labels, ", ")}#{label}")
+  end
+
+  # ── Scenario definition ────────────────────────────────────────────
+
+  @doc """
+  Each tick: {sim_time_s, [{node_id, fresh_ih_count}, ...]}
+  Represents sample responses arriving from those nodes at that time.
+  """
+  defp scenario do
+    [
+      # t=0: No responses yet, cold start
+      {0, []},
+
+      # t=3: First batch — nodes 101-105 each yield a few fresh IHs
+      {3, [{101, 2}, {102, 3}, {103, 1}, {104, 4}, {105, 2}]},
+
+      # t=6: Repeat responders accumulate; node 106 appears
+      {6, [{101, 3}, {102, 2}, {104, 3}, {106, 6}]},
+
+      # t=10: 102 and 104 cross the top16 threshold (fresh >= 5)
+      {10, [{102, 1}, {104, 1}, {107, 8}, {108, 1}]},
+
+      # t=15: New wave, old nodes still within TTL
+      {15, [{109, 7}, {110, 3}, {101, 1}]},
+
+      # t=22: Nodes from t=0..3 expire (ts <= 2 pruned, cutoff = 22-20 = 2)
+      #       105 (last_ts=3) survives but barely. 103 (last_ts=3) too.
+      {22, [{111, 9}, {112, 5}]},
+
+      # t=30: Nodes from t=6 expire (cutoff=10). 101,102 gone unless refreshed.
+      #       Demonstrates full rotation.
+      {30, [{113, 6}, {101, 4}]},
+
+      # t=40: Most early nodes expired. 101 refreshed at t=30 survives.
+      {40, [{114, 10}, {115, 3}]},
+    ]
+  end
+
+  # ── Main entry point ───────────────────────────────────────────────
+
+  def run do
+    setup()
+    seed_random_dht_nodes(30)
+
+    IO.puts("""
+    ╔══════════════════════════════════════════════════════════════╗
+    ║         Yielding Node Rotation Simulation                   ║
+    ║                                                              ║
+    ║  TTL = #{@yielding_ttl_s}s  |  Top16 threshold = #{@top16_min} fresh  |  Max top = #{@top16_max}  ║
+    ║                                                              ║
+    ║  Legend: ★ = in top16, (yN) = yielding with N fresh         ║
+    ╚══════════════════════════════════════════════════════════════╝
+    """)
+
+    scenario()
+    |> Enum.each(fn {sim_time, responses} ->
+      IO.puts("━━━ t=#{sim_time}s ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+      # Step 1: Cleanup expired yielding nodes
+      pruned = cleanup_expired(sim_time)
+      if pruned > 0, do: IO.puts("  ⤹ Pruned #{pruned} expired yielding nodes (cutoff=#{sim_time - @yielding_ttl_s}s)")
+
+      # Step 2: Ingest new responses
+      mapped_responses =
+        Enum.map(responses, fn {node_id, fresh} -> {make_node(node_id), fresh} end)
+
+      if responses != [] do
+        labels = Enum.map(responses, fn {id, f} -> "#{node_label(make_node(id))}+#{f}" end)
+        IO.puts("  ⤹ Responses: #{Enum.join(labels, ", ")}")
+      else
+        IO.puts("  ⤹ No responses this tick")
+      end
+
+      ingest_responses(mapped_responses, sim_time)
+
+      # Step 2b: Increase DHT scores for responding nodes (simulates peer success path)
+      Enum.each(mapped_responses, fn {nv4, fresh} ->
+        if fresh > 0, do: maybe_increase_score(nv4)
+      end)
+
+      # Step 3: Rebuild top16
+      rebuild_top16(sim_time)
+
+      # Step 4: Select nodes for next sampling round
+      selected = sampling_nodes(8, sim_time)
+
+      # Step 5: Display
+      print_state(selected)
+      IO.puts("")
+    end)
+
+    # Final summary
+    print_rotation_summary()
+
+    teardown()
+  end
+
+  defp print_rotation_summary do
+    IO.puts("━━━ ROTATION SUMMARY ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+    final_yielding =
+      :ets.tab2list(@ets_yielding)
+      |> Enum.sort_by(fn {_, f, _} -> -f end)
+
+    final_top16 =
+      :ets.tab2list(@ets_top16)
+      |> Enum.map(fn {nv4} -> nv4 end)
+
+    scored =
+      :ets.tab2list(@ets_node_rev)
+      |> Enum.filter(fn {_, _, score} -> score > @score_new end)
+      |> Enum.sort_by(fn {_, _, score} -> -score end)
+
+    IO.puts("""
+      Surviving yielding nodes: #{length(final_yielding)}
+      Current top16 members:    #{length(final_top16)}
+      DHT nodes with score > 0: #{length(scored)}
+
+      Key insight: nodes that stop yielding fresh IHs expire after #{@yielding_ttl_s}s,
+      making room for new productive nodes. The top16 list continuously
+      reflects the most productive current nodes, while sampling_nodes/1
+      always mixes in random DHT nodes to discover new yielders.
+    """)
+  end
+end
+
+YieldRotationSim.run()
