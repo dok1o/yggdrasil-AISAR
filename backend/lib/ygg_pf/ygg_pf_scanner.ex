@@ -172,6 +172,12 @@ defmodule GenS.YggPFScanner do
     {:noreply, st}
   end
 
+  def handle_cast({:pf_packet, _packet, _uaddr} = msg, st),
+    do: handle_pf_packet(msg, st)
+
+  def handle_cast({:pf_packet_ygg, _packet, _yaddr} = msg, st),
+    do: handle_pf_packet(msg, st)
+
   defp count_origins(stats, origins) do
     Enum.reduce(origins, stats, fn origin, acc ->
       acc
@@ -204,7 +210,7 @@ defmodule GenS.YggPFScanner do
   end
 
   # A PF packet over the underlay proves reachability, not identity (spec section 35).
-  def handle_cast({:pf_packet, packet, uaddr}, st) do
+  defp handle_pf_packet({:pf_packet, packet, uaddr}, st) do
     case Wire.pong_fid(packet) do
       {:ok, fid} ->
         Log.log_pong(uaddr, fid)
@@ -227,7 +233,7 @@ defmodule GenS.YggPFScanner do
   end
 
   # Only this path may promote to trusted (spec section 34, INV-018).
-  def handle_cast({:pf_packet_ygg, packet, yaddr}, st) do
+  defp handle_pf_packet({:pf_packet_ygg, packet, yaddr}, st) do
     with {:ok, fid} <- Wire.pong_fid(packet),
          true <- Store.yaddr_matches?(fid, yaddr) do
       uaddrs = pending_uaddrs(fid)

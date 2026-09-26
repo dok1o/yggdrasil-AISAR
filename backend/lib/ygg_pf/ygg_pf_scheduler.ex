@@ -281,5 +281,11 @@ defmodule GenS.YggPFScheduler do
     end
   end
 
+  defp default_density do
+    fnodes = YggPF.Store.reachable_yaddr_count()
+    legacy = max(TryETS.size(:nodes), 1)
+    {fnodes, legacy}
+  end
+
   defp now_ms, do: System.monotonic_time(:millisecond)
 end

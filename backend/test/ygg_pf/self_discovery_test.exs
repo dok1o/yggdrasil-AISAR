@@ -28,7 +28,7 @@ defmodule YggPF.SelfDiscoveryTest do
   @third_uaddr <<192, 0, 2, 77, 0x1A, 0xE1>>
 
   defp ygg_ip(seed) do
-    key = :crypto.hash(:sha256, <<seed::32>>) |> then(&(&1 <> &1))
+    key = :crypto.hash(:sha256, <<seed::32>>)
     <<a::16, b::16, c::16, d::16, e::16, f::16, g::16, h::16>> = Ygg.Address.addr_for_key(key)
     {a, b, c, d, e, f, g, h}
   end
@@ -70,7 +70,7 @@ defmodule YggPF.SelfDiscoveryTest do
       frags =
         Reconstruct.fragments(painted(ip, @other_uaddr), @cursor, @epoch, @third_uaddr)
 
-      assert [%{yaddr: ^ip, uaddrs: uaddrs, responders: responders}] =
+      assert [%{yaddr: {^ip, @port}, uaddrs: uaddrs, responders: responders}] =
                Reconstruct.candidates(frags)
 
       assert uaddrs == [@other_uaddr]
@@ -87,7 +87,7 @@ defmodule YggPF.SelfDiscoveryTest do
           Reconstruct.fragments([e1], @cursor, @epoch, @other_uaddr)
         )
 
-      assert [%{yaddr: ^ip, responders: responders}] = Reconstruct.candidates(frags)
+      assert [%{yaddr: {^ip, @port}, responders: responders}] = Reconstruct.candidates(frags)
       assert Enum.sort(responders) == Enum.sort([@third_uaddr, @other_uaddr])
     end
   end
