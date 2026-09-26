@@ -36,9 +36,11 @@ defmodule GenS.YggPFScheduler do
   use GenServer
   require Logger
 
-  alias YggPF.{Codec, Const, Cursor, Self}
+  alias YggPF.{Codec, Const, Cursor, Diag, Paint, Self}
 
   @tick_ms 250
+  @diag_tick_ms 10_000
+  @clean_tick_ms 5_000
   @ticks_per_second div(1_000, @tick_ms)
   @paint_lag_ticks 2
 
@@ -89,9 +91,16 @@ defmodule GenS.YggPFScheduler do
 
     st = arm_scan_gate(st)
 
+    Paint.create_tables()
+
     case Keyword.get(opts, :autotick, true) do
-      true -> :timer.send_interval(@tick_ms, :tick)
-      false -> :ok
+      true ->
+        :timer.send_interval(@tick_ms, :tick)
+        :timer.send_interval(@diag_tick_ms, :diag)
+        :timer.send_interval(@clean_tick_ms, :clean)
+
+      false ->
+        :ok
     end
 
     {:ok, st}
@@ -116,6 +125,17 @@ defmodule GenS.YggPFScheduler do
 
   @impl true
   def handle_info(:tick, st), do: {:noreply, do_tick(st)}
+
+  def handle_info(:diag, st) do
+    Diag.log_state(st.cursor.cursor)
+    {:noreply, st}
+  end
+
+  def handle_info(:clean, st) do
+    Paint.clean()
+    {:noreply, st}
+  end
+
   def handle_info(_other, st), do: {:noreply, st}
 
   # ------------------------------------------------------------------ #
@@ -142,6 +162,7 @@ defmodule GenS.YggPFScheduler do
 
       false ->
         Logger.debug("[YggPF] epoch #{st.cursor.epoch} -> #{epoch}, cursor reset to 0")
+        Paint.reset_epoch()
 
         %{
           st
@@ -226,15 +247,20 @@ defmodule GenS.YggPFScheduler do
   # Defaults                                                            #
   # ------------------------------------------------------------------ #
 
-  # Both paint and scan are find_node (INV-013). `Sender.many_find_node/2` takes
-  # `[{target, context}]` plus the sender identity to query under:
+  # Paint and scan are both find_node (INV-013), but they differ in which field
+  # carries what:
   #
-  #   paint - identity = id_paint (prefix + random affix), so the nodes we reach
-  #           store us under the region prefix; target = our own yid, so the nodes
-  #           that end up holding us are exactly the ones a scanner will ask
-  #           (spec sections 6, 20).
-  #   scan  - identity = our ordinary node id (`:nid`); target = prefix + random
-  #           affix, so we walk the region rather than a fixed point (spec section 7).
+  #   paint - sender id = yid_i           <- this is the payload; Mainline stores
+  #                                          the SENDER id against our address
+  #           target    = id_paint_i         (prefix + random affix: a probe point
+  #                                          that spreads paints across the region)
+  #
+  #   scan  - sender id = our node id (:nid)
+  #           target    = id_paint_i         (walk the region, spec section 7)
+  #
+  # Sending id_paint as the *sender id* - an earlier reading of spec section 20 - paints an
+  # affix with a random checksum that every scanner correctly discards. See
+  # YggPF.Paint for the full argument.
   defp default_emit(kind, cursor) do
     epoch = Codec.current_epoch()
     # The reply carries no rotation marker, so the cursor and epoch ride along in
@@ -243,16 +269,17 @@ defmodule GenS.YggPFScheduler do
 
     Enum.each(0..(Const.n_parts() - 1), fn part ->
       prefix = prefix_for(part, cursor, epoch)
+      target = Codec.id_paint(prefix)
 
       case kind do
         k when k in [:paint, :fixed_paint] ->
           case own_yid(part, prefix) do
             nil -> :skip
-            yid -> Sender.many_find_node([{yid, ctx}], {:fid, Codec.id_paint(prefix)})
+            yid -> Paint.paint(yid, target, ctx)
           end
 
         k when k in [:scan, :fixed_scan] ->
-          Sender.many_find_node([{Codec.id_paint(prefix), ctx}], :nid)
+          Paint.scan(target, ctx)
       end
     end)
   end

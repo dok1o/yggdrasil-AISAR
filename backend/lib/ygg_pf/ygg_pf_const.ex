@@ -181,6 +181,18 @@ defmodule YggPF.Const do
   @doc "Per-fnode cooldown after a query. Copied from `pf_node_processor.ex:41` (D-8)."
   def cooldown_ms, do: @cooldown_ms
 
+  @ask_cooldown_ms 5_000
+
+  @doc """
+  Short cooldown applied to any DHT node we ask, paint or scan.
+
+  Deliberately much smaller than `cooldown_ms/0`: that one governs how often we
+  re-probe a *candidate fnode*, whereas this one only spreads our own outbound
+  find_node traffic across the nodes nearest the region prefix, so a small stable
+  set is not hammered every 250 ms tick.
+  """
+  def ask_cooldown_ms, do: @ask_cooldown_ms
+
   @doc "Below this many reachable yaddrs, discovery is degraded (spec section 43)."
   def min_reachable_yaddrs, do: @min_reachable_yaddrs
 
