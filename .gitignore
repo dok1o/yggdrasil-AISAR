@@ -8,16 +8,8 @@ __pycache__/
 backend/_build/
 backend/deps/
 
-# Runtime data
-data/logs/
-data/caches/
-data/journals/
-data/*.db
-data/*.db-shm
-data/*.db-wal
-
-# Local Yggdrasil identity
-data/ygg/ygg_key.hex
+# Runtime data (including the local Yggdrasil identity)
+data/
 
 # Windows download metadata copied into WSL
 *:Zone.Identifier
