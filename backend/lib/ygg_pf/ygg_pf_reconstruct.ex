@@ -35,38 +35,74 @@ defmodule YggPF.Reconstruct do
   @typedoc "uaddr as it appears in a compact entry."
   @type uaddr :: binary()
 
+  @typedoc """
+  A recovered payload fragment.
+
+  `uaddr` is the address embedded in the compact entry - where the painted node
+  claims to be reachable. `responder` is the DHT node that *sent* us the entry.
+  They are usually different nodes, and the difference is what lets the scanner
+  tell an echo of its own paint from a genuine third-party sighting.
+  """
+  @type fragment :: %{part: binary(), uaddr: uaddr(), responder: uaddr() | nil}
+
+  @typedoc "A reconstructed candidate and the provenance of the fragments that built it."
+  @type candidate :: %{
+          yaddr: Codec.yaddr(),
+          uaddrs: [uaddr()],
+          responders: [uaddr()]
+        }
+
   @doc """
   Reduce raw `nodes` entries to fragments grouped by part index.
 
-  Returns `%{part_index => [{part, uaddr}]}`. The `uaddr` is carried along because
-  it is the address the painting node was reachable at - it arrives for free in the
-  same compact entry as the yid and never needs to be encoded in the payload.
+  `responder` is the underlay address of the node that returned these entries. It
+  is carried untouched into every fragment and on into the candidate, so callers
+  can attribute a finding to its origin. Pass `nil` when the origin is unknown.
+
+  The `uaddr` inside each entry is kept as well: it is the address the painting
+  node is reachable at, and it arrives for free in the same compact entry as the
+  yid, which is exactly why the payload never needs to encode it (D-1).
   """
-  @spec fragments([node_entry()], non_neg_integer(), non_neg_integer()) ::
-          %{non_neg_integer() => [{binary(), uaddr()}]}
-  def fragments(nodes, cursor, epoch) do
+  @spec fragments([node_entry()], non_neg_integer(), non_neg_integer(), uaddr() | nil) ::
+          %{non_neg_integer() => [fragment()]}
+  def fragments(nodes, cursor, epoch, responder \\ nil) do
     for {id, uaddr} <- nodes,
         part_index <- 0..(@n_parts - 1),
         Codec.prefix_match?(id, part_index, cursor, epoch),
         {:ok, part} <- [Codec.fragment(id)],
         reduce: %{} do
-      acc -> Map.update(acc, part_index, [{part, uaddr}], &[{part, uaddr} | &1])
+      acc -> add(acc, part_index, part, uaddr, responder)
     end
   end
 
   @doc """
   Same reduction against the epoch-independent fixed prefix (spec section 27).
   """
-  @spec fixed_fragments([node_entry()]) :: %{non_neg_integer() => [{binary(), uaddr()}]}
-  def fixed_fragments(nodes) do
+  @spec fixed_fragments([node_entry()], uaddr() | nil) ::
+          %{non_neg_integer() => [fragment()]}
+  def fixed_fragments(nodes, responder \\ nil) do
     for {id, uaddr} <- nodes,
         part_index <- 0..(@n_parts - 1),
         Codec.fixed_prefix_match?(id, part_index),
         {:ok, part} <- [Codec.fragment(id)],
         reduce: %{} do
-      acc -> Map.update(acc, part_index, [{part, uaddr}], &[{part, uaddr} | &1])
+      acc -> add(acc, part_index, part, uaddr, responder)
     end
   end
+
+  defp add(acc, part_index, part, uaddr, responder) do
+    frag = %{part: part, uaddr: uaddr, responder: responder}
+    Map.update(acc, part_index, [frag], &[frag | &1])
+  end
+
+  @doc """
+  Merge fragment maps from several replies, so one reconstruction can combine
+  fragments that arrived from different responders.
+  """
+  @spec merge_fragments(%{non_neg_integer() => [fragment()]}, %{
+          non_neg_integer() => [fragment()]
+        }) :: %{non_neg_integer() => [fragment()]}
+  def merge_fragments(a, b), do: Map.merge(a, b, fn _k, x, y -> x ++ y end)
 
   @doc """
   How many yids matched any of our prefixes - the input to cursor escalation
@@ -76,17 +112,17 @@ defmodule YggPF.Reconstruct do
   def match_count(frags), do: frags |> Map.values() |> Enum.map(&length/1) |> Enum.sum()
 
   @doc """
-  Cross-product the fragments into candidate `{yaddr, uaddrs}` tuples.
+  Cross-product the fragments into candidates.
 
   Only combinations that reconstruct into a well-formed Yggdrasil address survive.
-  Each distinct yaddr collects the set of uaddrs its fragments arrived from, since
-  either fragment's source is a plausible place to reach the node.
+  Each distinct yaddr collects both the uaddrs its fragments claimed and the
+  responders that supplied them, since either fragment's source is a plausible
+  place to reach the node and the responders establish provenance.
 
   `:max_pairs` bounds the cross product so a flooded region cannot blow up the
   scanner; the excess is dropped and logged (spec section 60, "excessive yids").
   """
-  @spec candidates(%{non_neg_integer() => [{binary(), uaddr()}]}, keyword()) ::
-          [{Codec.yaddr(), [uaddr()]}]
+  @spec candidates(%{non_neg_integer() => [fragment()]}, keyword()) :: [candidate()]
   def candidates(frags, opts \\ []) do
     max_pairs = Keyword.get(opts, :max_pairs, 4_096)
 
@@ -103,13 +139,31 @@ defmodule YggPF.Reconstruct do
 
     a
     |> pairs(b, max_pairs)
-    |> Enum.reduce(%{}, fn {{pa, ua}, {pb, ub}}, acc ->
-      case reconstruct_pair(pa, pb) do
-        {:ok, yaddr} -> Map.update(acc, yaddr, uniq([ua, ub]), &uniq(&1 ++ [ua, ub]))
-        :error -> acc
+    |> Enum.reduce(%{}, fn {fa, fb}, acc ->
+      case reconstruct_pair(fa.part, fb.part) do
+        {:ok, yaddr} ->
+          Map.update(
+            acc,
+            yaddr,
+            %{
+              yaddr: yaddr,
+              uaddrs: uniq([fa.uaddr, fb.uaddr]),
+              responders: uniq([fa.responder, fb.responder])
+            },
+            fn c ->
+              %{
+                c
+                | uaddrs: uniq(c.uaddrs ++ [fa.uaddr, fb.uaddr]),
+                  responders: uniq(c.responders ++ [fa.responder, fb.responder])
+              }
+            end
+          )
+
+        :error ->
+          acc
       end
     end)
-    |> Enum.map(fn {yaddr, uaddrs} -> {yaddr, uaddrs} end)
+    |> Map.values()
   end
 
   # Lazily bound the cross product so a flooded region cannot materialise a huge list.

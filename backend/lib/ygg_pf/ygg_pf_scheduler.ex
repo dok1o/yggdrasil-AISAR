@@ -36,7 +36,7 @@ defmodule GenS.YggPFScheduler do
   use GenServer
   require Logger
 
-  alias YggPF.{Codec, Const, Cursor}
+  alias YggPF.{Codec, Const, Cursor, Self}
 
   @tick_ms 250
   @ticks_per_second div(1_000, @tick_ms)
@@ -237,6 +237,9 @@ defmodule GenS.YggPFScheduler do
   #           affix, so we walk the region rather than a fixed point (spec section 7).
   defp default_emit(kind, cursor) do
     epoch = Codec.current_epoch()
+    # The reply carries no rotation marker, so the cursor and epoch ride along in
+    # the KRPC context and come back to us in KRPCReplySubTask.handle_ctx/4.
+    ctx = reply_ctx(cursor, epoch)
 
     Enum.each(0..(Const.n_parts() - 1), fn part ->
       prefix = prefix_for(part, cursor, epoch)
@@ -245,14 +248,17 @@ defmodule GenS.YggPFScheduler do
         k when k in [:paint, :fixed_paint] ->
           case own_yid(part, prefix) do
             nil -> :skip
-            yid -> Sender.many_find_node([{yid, :ygg_pf}], {:fid, Codec.id_paint(prefix)})
+            yid -> Sender.many_find_node([{yid, ctx}], {:fid, Codec.id_paint(prefix)})
           end
 
         k when k in [:scan, :fixed_scan] ->
-          Sender.many_find_node([{Codec.id_paint(prefix), :ygg_pf}], :nid)
+          Sender.many_find_node([{Codec.id_paint(prefix), ctx}], :nid)
       end
     end)
   end
+
+  defp reply_ctx(:fixed, _epoch), do: :ygg_pf_fixed
+  defp reply_ctx(cursor, epoch), do: {:ygg_pf, cursor, epoch}
 
   defp prefix_for(part, :fixed, _epoch), do: Codec.derive_fixed_prefix(part)
   defp prefix_for(part, cursor, epoch), do: Codec.derive_prefix(part, cursor, epoch)
@@ -260,7 +266,7 @@ defmodule GenS.YggPFScheduler do
   # Our own painted yid for `part`: the affix half is fixed by our yaddr, only the
   # prefix half rotates with the epoch.
   defp own_yid(part, prefix) do
-    case own_painter_address() do
+    case Self.painter_address() do
       nil ->
         nil
 
@@ -273,48 +279,6 @@ defmodule GenS.YggPFScheduler do
 
         Codec.build_yid(prefix, affix)
     end
-  end
-
-  defp own_painter_address do
-    case :persistent_term.get({__MODULE__, :painter}, :miss) do
-      :miss ->
-        painter = compute_own_painter_address()
-        if painter, do: :persistent_term.put({__MODULE__, :painter}, painter)
-        painter
-
-      painter ->
-        painter
-    end
-  end
-
-  # `Ygg.self_info/1` returns a *formatted* address string (Ygg.Address.format/1)
-  # and a *hex* key, not raw binaries - parse rather than pattern match.
-  defp compute_own_painter_address do
-    case Ygg.self_info() do
-      %{address: addr} when is_binary(addr) ->
-        case :inet.parse_ipv6_address(String.to_charlist(addr)) do
-          {:ok, ip} ->
-            Codec.painter_address(ip, Const.ygg_pf_port())
-
-          {:error, _} ->
-            Logger.warning("[YggPF] cannot parse own Ygg address #{inspect(addr)}")
-            nil
-        end
-
-      _unavailable ->
-        Logger.debug("[YggPF] own Ygg address not available yet; skipping paint")
-        nil
-    end
-  rescue
-    _ -> nil
-  catch
-    :exit, _ -> nil
-  end
-
-  defp default_density do
-    fnodes = YggPF.Store.reachable_yaddr_count()
-    legacy = max(TryETS.size(:nodes), 1)
-    {fnodes, legacy}
   end
 
   defp now_ms, do: System.monotonic_time(:millisecond)

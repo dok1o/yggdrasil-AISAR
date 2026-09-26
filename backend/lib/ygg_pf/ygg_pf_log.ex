@@ -141,4 +141,107 @@ defmodule YggPF.Log do
       "[YggPF] === PONG === #{PrinterSync.peer(uaddr)} fid=#{Base.encode16(fid, case: :lower)}"
     )
   end
+
+  # ------------------------------------------------------------------ #
+  # Self-discovery                                                      #
+  # ------------------------------------------------------------------ #
+
+  @doc """
+  Log the scanner finding its **own** yaddr, naming the node the finding came from.
+
+  The origin is the whole point of this log line:
+
+    * from **another** node - our paint reached the DHT, was stored by a peer we
+      did not query directly, and came back to us. This is positive proof that we
+      are discoverable, and the strongest signal that painting works end to end.
+    * from **ourselves** - a local echo out of our own routing table. Expected
+      noise; it says nothing about whether anyone else can find us.
+    * **unattributed** - no responder was recorded, so it could be either.
+
+  Returns the origin so callers can count it.
+  """
+  @spec log_self_discovery(map()) :: :self | :other | :unknown
+  def log_self_discovery(%{yaddr: {ip, port}} = candidate) do
+    responders = Map.get(candidate, :responders, [])
+    uaddrs = Map.get(candidate, :uaddrs, [])
+    origin = YggPF.Self.origin(responders)
+    addr = "#{:inet.ntoa(ip)}:#{port}"
+
+    case origin do
+      :other ->
+        Logger.info(
+          "[YggPF] SELF-DISCOVERY: own yaddr #{addr} was returned by OTHER node(s) " <>
+            "#{peers(responders)} - origin is a third party, so our paint has " <>
+            "propagated and we are discoverable."
+        )
+
+      :self ->
+        Logger.debug(
+          "[YggPF] SELF-DISCOVERY: own yaddr #{addr} was returned by the SAME node " <>
+            "(ourselves, #{peers(responders)}) - local echo of our own paint, " <>
+            "not evidence of propagation."
+        )
+
+      :unknown ->
+        Logger.debug(
+          "[YggPF] SELF-DISCOVERY: own yaddr #{addr} found but the origin is " <>
+            "UNATTRIBUTED (#{origin_reason(responders)}) - cannot tell a third-party " <>
+            "sighting from a local echo."
+        )
+    end
+
+    warn_on_uaddr_mismatch(addr, uaddrs, origin)
+    origin
+  end
+
+  def log_self_discovery(_malformed), do: :unknown
+
+  # Someone reporting our yaddr against an underlay address that is not ours is
+  # worth surfacing, but it is not automatically an attack: our own uaddr can
+  # legitimately differ per observer under NAT.
+  defp warn_on_uaddr_mismatch(_addr, [], _origin), do: :ok
+
+  defp warn_on_uaddr_mismatch(addr, uaddrs, origin) when origin in [:other, :unknown] do
+    known = Enum.reject(uaddrs, &is_nil/1)
+
+    cond do
+      known == [] ->
+        :ok
+
+      is_nil(YggPF.Self.uaddr()) ->
+        :ok
+
+      Enum.any?(known, &YggPF.Self.own_uaddr?/1) ->
+        :ok
+
+      true ->
+        Logger.warning(
+          "[YggPF] SELF-DISCOVERY: own yaddr #{addr} is painted against uaddr(s) " <>
+            "#{peers(known)}, none of which is ours (#{peer(YggPF.Self.uaddr())}). " <>
+            "Either a NAT remapping or another node painting our address."
+        )
+    end
+  end
+
+  defp warn_on_uaddr_mismatch(_addr, _uaddrs, _origin), do: :ok
+
+  defp origin_reason(responders) do
+    case Enum.reject(responders, &is_nil/1) do
+      [] -> "responder not recorded"
+      _known -> "own uaddr not yet known"
+    end
+  end
+
+  defp peers(list) do
+    case list |> Enum.reject(&is_nil/1) |> Enum.map(&peer/1) do
+      [] -> "unknown"
+      names -> Enum.join(names, ", ")
+    end
+  end
+
+  defp peer(uaddr) do
+    PrinterSync.peer(uaddr)
+  rescue
+    _ -> inspect(uaddr)
+  end
 end

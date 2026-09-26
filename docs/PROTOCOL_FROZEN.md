@@ -70,6 +70,24 @@ single-bit mutations (verified exhaustively over all 80 positions, both in Pytho
 `YggPF.CodecTest`); the `200::/7` range check rejects a further 255/256 of mis-paired
 fragments. That is what keeps the `N = 2` cross product tractable under flooding.
 
+**Self-sightings are attributed, not just counted.** When the scanner reconstructs its
+*own* yaddr, the origin decides what the event means, so the responder is threaded from
+`KRPCReplySubTask.handle_ctx/4` through `YggPF.Reconstruct` into the candidate and logged
+explicitly:
+
+| Origin | Meaning |
+|---|---|
+| `:other` — a remote node returned it | our paint propagated and third parties can find us — the strongest positive signal the scanner produces |
+| `:self` — we returned it to ourselves | local echo out of our own routing table; proves nothing |
+| `:unknown` — no responder, or our own uaddr not yet known | deliberately *not* folded into `:self`, so an unattributable sighting can never masquerade as a confirmed echo |
+
+Self-sightings are also excluded from `pingx` probing (pinging ourselves would waste a
+query and occupy a cooldown slot), and a sighting of our yaddr against an underlay address
+that is not ours is surfaced as a possible NAT remapping *or* another node painting our
+address. Because the cursor and epoch are not recoverable from a reply, they ride in the
+KRPC context (`{:ygg_pf, cursor, epoch}`), with `:ygg_pf_fixed` for the epoch-independent
+path so the §42 clock-desync asymmetry stays observable.
+
 **Guess-space reduction.** Before the reference implementation was delivered, the
 unconstrained combination space across the open items was 884 736. Evidence from
 `b_pf_new/` and `ygg_ex/` cut it to 18 432 — a 48× reduction — and the remainder is now

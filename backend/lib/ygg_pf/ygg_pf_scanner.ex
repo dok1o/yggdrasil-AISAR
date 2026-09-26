@@ -28,7 +28,7 @@ defmodule GenS.YggPFScanner do
   use GenServer
   require Logger
 
-  alias YggPF.{Codec, Const, Log, Reconstruct, Store, Wire}
+  alias YggPF.{Const, Log, Reconstruct, Self, Store, Wire}
 
   @ets_cooldown :ygg_pf_pinged
   @stats_tick_ms 5_000
@@ -42,7 +42,13 @@ defmodule GenS.YggPFScanner do
               pongs: 0,
               validated: 0,
               uaddr_only: 0,
-              rejected_yaddr_mismatch: 0
+              rejected_yaddr_mismatch: 0,
+              # self-sightings: our own yaddr scanned back out of the DHT,
+              # split by who returned it (see YggPF.Self.origin/1)
+              self_sightings: 0,
+              self_via_other: 0,
+              self_via_self: 0,
+              self_via_unknown: 0
             },
             started_ms: 0,
             epoch_candidates: 0,
@@ -56,9 +62,24 @@ defmodule GenS.YggPFScanner do
   def start_link(opts \\ []), do: GenServer.start_link(__MODULE__, opts, name: name(opts))
   defp name(opts), do: Keyword.get(opts, :name, __MODULE__)
 
-  @doc "Feed a `nodes` reply in. Called from the KRPC reply path for the `:ygg_pf` context."
-  def nodes_reply(server \\ __MODULE__, nodes, cursor, epoch),
-    do: GenServer.cast(server, {:nodes, nodes, cursor, epoch})
+  @doc """
+  Feed a `nodes` reply in. Called from the KRPC reply path for the `:ygg_pf` context.
+
+  `responder` is the underlay address of the node that sent the reply. Supplying it
+  is what lets a self-sighting be attributed to a third party rather than to our own
+  echo; pass `nil` only when the origin genuinely is not available.
+  """
+  def nodes_reply(server \\ __MODULE__, nodes, cursor, epoch, responder),
+    do: GenServer.cast(server, {:nodes, nodes, cursor, epoch, responder})
+
+  @doc """
+  Feed a reply to a fixed-prefix (epoch-independent) query in (spec section 27).
+
+  Counted separately so that "the epoch path found nothing but the fixed path
+  worked" stays detectable - that asymmetry is the spec section 42 clock-desync signal.
+  """
+  def fixed_nodes_reply(server \\ __MODULE__, nodes, responder),
+    do: GenServer.cast(server, {:fixed_nodes, nodes, responder})
 
   @doc "Feed an inbound PF packet received over the **underlay**."
   def pf_packet(server \\ __MODULE__, packet, uaddr),
@@ -95,28 +116,91 @@ defmodule GenS.YggPFScanner do
   def handle_call(:stats, _from, st), do: {:reply, st.stats, st}
 
   @impl true
-  def handle_cast({:nodes, nodes, cursor, epoch}, st) do
-    frags = Reconstruct.fragments(nodes, cursor, epoch)
+  def handle_cast({:nodes, nodes, cursor, epoch, responder}, st) do
+    frags = Reconstruct.fragments(nodes, cursor, epoch, responder)
     matched = Reconstruct.match_count(frags)
 
     # Density feedback drives cursor escalation (spec section 21).
     if matched > 0, do: GenS.YggPFScheduler.observe(st.scheduler, matched)
 
-    candidates = Reconstruct.candidates(frags)
-    Enum.each(candidates, &probe_candidate/1)
+    # Our own yaddr is separated out before probing: pinging ourselves would waste
+    # a query, occupy a cooldown slot and could register us as our own candidate.
+    {mine, others} =
+      frags
+      |> Reconstruct.candidates()
+      |> Enum.split_with(&Self.own_yaddr?(&1.yaddr))
+
+    origins = Enum.map(mine, &Log.log_self_discovery/1)
+    Enum.each(others, &probe_candidate/1)
 
     st = %{
       st
-      | epoch_candidates: st.epoch_candidates + length(candidates),
+      | epoch_candidates: st.epoch_candidates + length(others),
         stats:
           st.stats
           |> Map.update!(:replies, &(&1 + 1))
           |> Map.update!(:fragments, &(&1 + matched))
-          |> Map.update!(:candidates, &(&1 + length(candidates)))
-          |> Map.update!(:pingx_sent, &(&1 + length(candidates)))
+          |> Map.update!(:candidates, &(&1 + length(others)))
+          |> Map.update!(:pingx_sent, &(&1 + length(others)))
+          |> count_origins(origins)
     }
 
     {:noreply, st}
+  end
+
+  def handle_cast({:fixed_nodes, nodes, responder}, st) do
+    frags = Reconstruct.fixed_fragments(nodes, responder)
+
+    {mine, others} =
+      frags
+      |> Reconstruct.candidates()
+      |> Enum.split_with(&Self.own_yaddr?(&1.yaddr))
+
+    origins = Enum.map(mine, &Log.log_self_discovery/1)
+    Enum.each(others, &probe_candidate/1)
+
+    st = %{
+      st
+      | fixed_candidates: st.fixed_candidates + length(others),
+        stats:
+          st.stats
+          |> Map.update!(:replies, &(&1 + 1))
+          |> Map.update!(:fragments, &(&1 + Reconstruct.match_count(frags)))
+          |> count_origins(origins)
+    }
+
+    {:noreply, st}
+  end
+
+  defp count_origins(stats, origins) do
+    Enum.reduce(origins, stats, fn origin, acc ->
+      acc
+      |> Map.update!(:self_sightings, &(&1 + 1))
+      |> Map.update!(origin_key(origin), &(&1 + 1))
+    end)
+  end
+
+  defp origin_key(:other), do: :self_via_other
+  defp origin_key(:self), do: :self_via_self
+  defp origin_key(:unknown), do: :self_via_unknown
+
+  # Periodic roll-up of the self-sighting counters. "Has any third party ever
+  # returned my yaddr?" is the clearest answer available to "is my paint working?",
+  # so it is reported separately from the general scan counters rather than buried.
+  defp log_self_visibility(%{self_sightings: 0}) do
+    Logger.debug("[YggPF] self-visibility: own yaddr not yet seen back from the DHT")
+  end
+
+  defp log_self_visibility(s) do
+    Logger.info(
+      "[YggPF] self-visibility: #{s.self_sightings} sighting(s) of our own yaddr - " <>
+        "#{s.self_via_other} from OTHER nodes, #{s.self_via_self} self-echo, " <>
+        "#{s.self_via_unknown} unattributed" <>
+        case s.self_via_other do
+          0 -> " (no third party has returned our paint yet)"
+          _ -> " (paint confirmed discoverable by third parties)"
+        end
+    )
   end
 
   # A PF packet over the underlay proves reachability, not identity (spec section 35).
@@ -179,6 +263,8 @@ defmodule GenS.YggPFScanner do
         "#{s.pongs} pongs, #{s.validated} validated, #{s.uaddr_only} uaddr-only"
     )
 
+    log_self_visibility(s)
+
     Log.report(%{
       epoch_candidates: st.epoch_candidates,
       fixed_candidates: st.fixed_candidates,
@@ -205,7 +291,7 @@ defmodule GenS.YggPFScanner do
 
   # spec section 31: every reconstructed candidate is queried with pingx. Cooldown keeps a
   # flooded region from turning into an outbound amplifier (spec section 23).
-  defp probe_candidate({_yaddr, uaddrs}) do
+  defp probe_candidate(%{uaddrs: uaddrs}) do
     Enum.each(uaddrs, fn uaddr ->
       if TryETS.cooled_down_ms?(@ets_cooldown, uaddr) do
         TryETS.set_cooldown_ms(@ets_cooldown, uaddr, Const.cooldown_ms())

@@ -46,7 +46,7 @@ defmodule YggPF.ReconstructTest do
       nodes = Enum.shuffle(painted(ip, 2) ++ noise(300))
       frags = Reconstruct.fragments(nodes, @cursor, @epoch)
 
-      assert [{ip, _uaddrs}] = Reconstruct.candidates(frags)
+      assert [%{yaddr: ^ip}] = Reconstruct.candidates(frags)
     end
 
     test "fragments under the wrong cursor or epoch are not collected" do
@@ -74,7 +74,7 @@ defmodule YggPF.ReconstructTest do
       ip = ygg_ip(5)
       frags = Reconstruct.fragments(painted(ip, 5), @cursor, @epoch)
 
-      assert [{^ip, uaddrs}] = Reconstruct.candidates(frags)
+      assert [%{yaddr: ^ip, uaddrs: uaddrs}] = Reconstruct.candidates(frags)
       assert uaddr(5) in uaddrs
     end
 
@@ -96,7 +96,7 @@ defmodule YggPF.ReconstructTest do
         |> Enum.shuffle()
 
       frags = Reconstruct.fragments(nodes, @cursor, @epoch)
-      found = frags |> Reconstruct.candidates() |> Enum.map(&elem(&1, 0))
+      found = frags |> Reconstruct.candidates() |> Enum.map(& &1.yaddr)
 
       assert Enum.sort(found) == Enum.sort(ips)
     end
@@ -118,7 +118,7 @@ defmodule YggPF.ReconstructTest do
       nodes = Enum.flat_map(Enum.with_index(ips), fn {ip, i} -> painted(ip, i + 1) end)
       frags = Reconstruct.fragments(nodes, @cursor, @epoch)
 
-      found = frags |> Reconstruct.candidates() |> Enum.map(&elem(&1, 0))
+      found = frags |> Reconstruct.candidates() |> Enum.map(& &1.yaddr)
 
       # every real address is found
       for ip <- ips, do: assert(ip in found)
@@ -131,7 +131,7 @@ defmodule YggPF.ReconstructTest do
       nodes = painted(ip, 9) ++ painted(ip, 9) ++ painted(ip, 9)
       frags = Reconstruct.fragments(nodes, @cursor, @epoch)
 
-      assert [{^ip, _}] = Reconstruct.candidates(frags)
+      assert [%{yaddr: ^ip}] = Reconstruct.candidates(frags)
     end
 
     test "excessive yids are capped rather than exploding" do
@@ -167,7 +167,7 @@ defmodule YggPF.ReconstructTest do
         end)
 
       frags = Reconstruct.fixed_fragments(nodes)
-      assert [{^ip, _}] = Reconstruct.candidates(frags)
+      assert [%{yaddr: ^ip}] = Reconstruct.candidates(frags)
 
       # and it is not visible to the epoch-dependent filter
       assert Reconstruct.fragments(nodes, @cursor, @epoch) == %{}

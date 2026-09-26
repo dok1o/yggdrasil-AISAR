@@ -26,6 +26,16 @@ defmodule KRPCReplySubTask do
   def handle_ctx(:pf_bootstrap, data, {_rid, nodev4}, _tid) do
     maybe_payload(nil, UnpackSync.nodes(data[@nodes]), nodev4, :pf_nodes)
   end
+  # ygg_pf SDP scan. The cursor and epoch travel in the context because a reply
+  # carries no way to tell which rotation it answers, and `nodev4` is the node that
+  # replied - passing it on is what lets the scanner attribute a sighting of our own
+  # yaddr to a third party rather than to a local echo.
+  def handle_ctx({:ygg_pf, cursor, epoch}, data, {_rid, nodev4}, _tid) do
+    GenS.YggPFScanner.nodes_reply(UnpackSync.nodes(data[@nodes]), cursor, epoch, nodev4)
+  end
+  def handle_ctx(:ygg_pf_fixed, data, {_rid, nodev4}, _tid) do
+    GenS.YggPFScanner.fixed_nodes_reply(UnpackSync.nodes(data[@nodes]), nodev4)
+  end
   def handle_ctx({:get_peers_asked, ih}, data, {_rid, nodev4}, _tid) do
     maybe_payload(ih, UnpackSync.nodes(data[@nodes]), nodev4, :nodes)
     try_find_woker(ih, UnpackSync.peers(data[@values]), nodev4, :values)
