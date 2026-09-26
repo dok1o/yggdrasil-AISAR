@@ -16,7 +16,14 @@ defmodule Spv.YggPFSup do
   use Supervisor
   require Logger
 
-  def start_link(opts \\ []), do: Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
+  def start_link(opts \\ []) do
+    if KeyStorageSync.use_ygg?() do
+      Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
+    else
+      Logger.info("[YggPF] disabled: enable_ygg is false")
+      :ignore
+    end
+  end
 
   @impl true
   def init(opts) do
@@ -30,18 +37,11 @@ defmodule Spv.YggPFSup do
   end
 
   @doc """
-  Child spec for the application supervisor, or `[]` when disabled.
+  Child spec for the application supervisor.
 
-  Mirrors the pattern used by `Spv.YggSup.child_spec_if_enabled/1`.
+  The setting is checked in `start_link/1`, after SettingsManager has started.
   """
   def child_spec_if_enabled(opts \\ []) do
-    cond do
-      not KeyStorageSync.use_ygg?() ->
-        Logger.info("[YggPF] disabled: enable_ygg is false")
-        []
-
-      true ->
-        [Supervisor.child_spec({__MODULE__, opts}, restart: :permanent)]
-    end
+    [Supervisor.child_spec({__MODULE__, opts}, restart: :permanent)]
   end
 end

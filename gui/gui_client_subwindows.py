@@ -1,5 +1,6 @@
 # gui_client_subwindows.py - dialogue windows
 import json
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QDialog, QDialogButtonBox, QVBoxLayout, QHBoxLayout, QFormLayout,
     QSpinBox, QTextEdit, QGroupBox, QPushButton, QComboBox, QLineEdit, QCheckBox, QGridLayout,
@@ -201,8 +202,13 @@ class SettingsDialog(QDialog):
             sock.sendall(evt + b"\n")
             self.scrape_now_btn.setText("Scrape requested...")
             self.scrape_now_btn.setEnabled(False)
+            QTimer.singleShot(15_000, self._reset_scrape_button)
         except (OSError, ValueError) as e:
             QMessageBox.critical(self, "Scrape Failed", f"Could not request scrape:\n{e}")
+
+    def _reset_scrape_button(self):
+        self.scrape_now_btn.setText("Scrape peers now")
+        self.scrape_now_btn.setEnabled(True)
 
     def get_current_settings(self):
         """Return a dict of current UI values mapped to config keys."""

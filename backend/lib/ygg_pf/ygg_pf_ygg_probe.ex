@@ -64,11 +64,7 @@ defmodule YggPF.YggProbe do
 
   @impl true
   def init(opts) do
-    # Receive {:ygg_traffic, node_id, src_key, payload} for traffic addressed to us.
-    case safe(fn -> Ygg.subscribe_traffic() end) do
-      {:ok, _} -> Logger.info("[YggPF.YggProbe] subscribed to Ygg traffic")
-      {:error, r} -> Logger.warning("[YggPF.YggProbe] subscribe failed: #{inspect(r)}")
-    end
+    send(self(), :subscribe)
 
     {:ok,
      %__MODULE__{
@@ -79,15 +75,13 @@ defmodule YggPF.YggProbe do
 
   @impl true
   def handle_cast({:pingx, _target, _port, <<fid::binary-32>>}, st) do
-    send_pingx(fid, st)
-    {:noreply, put_in(st.inflight[fid], now_ms())}
+    {:noreply, maybe_track_ping(fid, st)}
   end
 
   def handle_cast({:pingx, yaddr_bin, _port, nil}, st) when is_binary(yaddr_bin) do
     case do_resolve(yaddr_bin) do
       {:ok, fid} ->
-        send_pingx(fid, st)
-        {:noreply, put_in(st.inflight[fid], now_ms())}
+        {:noreply, maybe_track_ping(fid, st)}
 
       {:error, reason} ->
         Logger.debug("[YggPF.YggProbe] cannot resolve yaddr: #{inspect(reason)}")
@@ -98,15 +92,33 @@ defmodule YggPF.YggProbe do
   def handle_cast(_other, st), do: {:noreply, st}
 
   @impl true
+  def handle_info(:subscribe, st) do
+    case safe(fn -> Ygg.subscribe_traffic() end) do
+      {:ok, :ok} -> Logger.info("[YggPF.YggProbe] subscribed to Ygg traffic")
+      result ->
+        Logger.debug("[YggPF.YggProbe] waiting for Ygg traffic: #{inspect(result)}")
+        Process.send_after(self(), :subscribe, 5_000)
+    end
+
+    {:noreply, st}
+  end
+
   # src_key is authenticated by Yggdrasil - this is the trusted promotion path.
   def handle_info({:ygg_traffic, _node_id, <<src_key::binary-32>>, payload}, st) do
-    case Wire.pong_fid(payload) do
-      {:ok, fid} when fid == src_key ->
+    case Wire.parse(payload) do
+      {:ok, %{version: 2, opcode: 0x0001, tx_id: tx_id}} ->
+        if fid = st.fid || local_fid() do
+          _ = safe(fn -> Ygg.send_traffic(src_key, Wire.pong(fid, tx_id)) end)
+        end
+
+        {:noreply, st}
+
+      {:ok, %{version: 2, opcode: 0x4001, fid: fid}} when fid == src_key ->
         yaddr = derive_yaddr(src_key)
         GenS.YggPFScanner.pf_packet_ygg(st.scanner, payload, yaddr)
         {:noreply, %{st | inflight: Map.delete(st.inflight, src_key)}}
 
-      {:ok, other_fid} ->
+      {:ok, %{version: 2, opcode: 0x4001, fid: other_fid}} ->
         # The payload claims a different identity than the authenticated sender.
         Logger.warning(
           "[YggPF.YggProbe] fid/src_key mismatch: payload claims " <>
@@ -115,7 +127,7 @@ defmodule YggPF.YggProbe do
 
         {:noreply, st}
 
-      :error ->
+      _other ->
         {:noreply, st}
     end
   end
@@ -126,12 +138,28 @@ defmodule YggPF.YggProbe do
   # Internals                                                           #
   # ------------------------------------------------------------------ #
 
+  defp maybe_track_ping(fid, st) do
+    case send_pingx(fid, st) do
+      :ok -> put_in(st.inflight[fid], now_ms())
+      _failed -> st
+    end
+  end
+
   defp send_pingx(fid, st) do
-    packet = Wire.build(<<0::32>>, st.fid || <<0::256>>, Const.opcode_ping())
+    case st.fid || local_fid() do
+      nil -> {:error, :local_fid_unavailable}
+      own_fid -> send_pingx_with_fid(fid, own_fid)
+    end
+  end
+
+  defp send_pingx_with_fid(fid, own_fid) do
+    packet = Wire.build(<<0::32>>, own_fid, Const.opcode_ping())
 
     case safe(fn -> Ygg.send_traffic(fid, packet) end) do
-      {:ok, _} -> :ok
-      {:error, r} -> Logger.debug("[YggPF.YggProbe] send to #{short(fid)} failed: #{inspect(r)}")
+      {:ok, :ok} -> :ok
+      failed ->
+        Logger.debug("[YggPF.YggProbe] send to #{short(fid)} failed: #{inspect(failed)}")
+        {:error, failed}
     end
   end
 

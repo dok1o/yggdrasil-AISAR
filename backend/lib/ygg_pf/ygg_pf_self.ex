@@ -21,6 +21,24 @@ defmodule YggPF.Self do
   @painter_key {__MODULE__, :painter}
   @unknown_uaddr <<0, 0, 0, 0, 0, 0>>
 
+  @doc "Our 32-byte Ygg public key, or `nil` until the embedded node is ready."
+  @spec fid() :: binary() | nil
+  def fid do
+    case Ygg.self_info() do
+      %{key: hex} when is_binary(hex) ->
+        case Base.decode16(hex, case: :mixed) do
+          {:ok, <<key::binary-32>>} -> key
+          _ -> nil
+        end
+
+      _ -> nil
+    end
+  rescue
+    _ -> nil
+  catch
+    :exit, _ -> nil
+  end
+
   @doc "Our 144-bit painter address, or `nil` if the Ygg node is not up yet."
   @spec painter_address() :: binary() | nil
   def painter_address do

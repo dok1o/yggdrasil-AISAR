@@ -68,6 +68,12 @@ defmodule KRPCQuerySubTask do
   @f_syn 0
   def handle_query({@pq, %{@pf_magic => @f_syn} = _data, tid}, fnodev4, shard_id) do
     PFOutSync.send_pong(fnodev4)
+    # The legacy pong cannot carry a 32-byte Ygg fid; emit a v2 pong as well.
+    if Process.whereis(GenS.YggPFScanner) do
+      if fid = YggPF.Self.fid() do
+        KRPCUtilsSync.send_packet(shard_id, fnodev4, YggPF.Wire.pong(fid))
+      end
+    end
     Logger.debug("[PF] === QUERY DETECTED === from #{PrinterSync.peer(fnodev4)}")
     nid = WorkerIDSync.select_work_id_for_nodev4(fnodev4)
     reply_packet = WireSync.ping_reply(nid, tid)

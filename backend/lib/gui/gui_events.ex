@@ -26,6 +26,50 @@ defmodule GUIEvents do
     end
     reply(local_socket, "EVENT_ACK: gui.input.ping_x")
   end
+  def handle(%{"event" => "gui.ygg.scrape_peers", "payload" => payload}, local_socket)
+      when is_map(payload) do
+    region = Map.get(payload, "region", "europe")
+    limit = Map.get(payload, "limit", 20)
+
+    if is_binary(region) and String.match?(region, ~r/^[a-z0-9]+$/) and
+         is_integer(limit) and limit in 1..200 do
+      Task.start(fn ->
+        case YggPF.WebPeers.fetch(region: region, limit: limit) do
+          {:ok, peers} ->
+            added =
+              Enum.count(peers, fn peer ->
+                add_ygg_peer(peer.uri)
+              end)
+
+            Logger.info("[YggPF.WebPeers] added #{added}/#{length(peers)} peers from #{region}")
+
+          {:error, reason} ->
+            Logger.warning("[YggPF.WebPeers] scrape failed: #{inspect(reason)}")
+        end
+      end)
+
+      reply(local_socket, "EVENT_ACK: gui.ygg.scrape_peers")
+    else
+      Logger.warning("[YggPF.WebPeers] rejected invalid scrape request")
+      reply(local_socket, "EVENT_ERROR: gui.ygg.scrape_peers")
+    end
+  end
+  defp add_ygg_peer(uri) do
+    case Ygg.add_peer(uri) do
+      :ok -> true
+      {:error, reason} ->
+        Logger.warning("[YggPF.WebPeers] #{uri}: #{inspect(reason)}")
+        false
+    end
+  rescue
+    error ->
+      Logger.warning("[YggPF.WebPeers] #{uri}: #{inspect(error)}")
+      false
+  catch
+    :exit, reason ->
+      Logger.warning("[YggPF.WebPeers] #{uri}: #{inspect(reason)}")
+      false
+  end
   defp handle_loadmagnets(payload) do
     case payload do
       path when is_binary(path) ->

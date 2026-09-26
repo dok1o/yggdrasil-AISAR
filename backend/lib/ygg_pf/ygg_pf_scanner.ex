@@ -325,7 +325,7 @@ defmodule GenS.YggPFScanner do
   end
 
   defp dht_booted? do
-    case TryETS.size(:nodes) do
+    case TryETS.size(:dht_nodes) do
       n when is_integer(n) and n > 0 -> true
       _none -> false
     end

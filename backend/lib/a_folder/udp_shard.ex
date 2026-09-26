@@ -34,6 +34,8 @@ defmodule GenS.UDPSocketShard do
   @dht_marker 0x64
   @pf_marker 0x66
   @pf_ver 0x01
+  @ygg_pf_ver 0x02
+  @ygg_pf_header_size 44
   @pf_header_size 32
   @max_pf_pkt_size 1200
   defstruct [
@@ -124,6 +126,10 @@ defmodule GenS.UDPSocketShard do
   defp process_packet(<<@dht_marker, _rest::binary>> = pkt, ipv4, port, sh_id)
        when byte_size(pkt) <= @max_mainline_msg_size,
        do: work_dht_pkt(pkt, ipv4, port, sh_id)
+  defp process_packet(<<@pf_marker, @ygg_pf_ver, _rest::binary>> = pkt, ipv4, port, sh_id)
+       when byte_size(pkt) >= @ygg_pf_header_size and byte_size(pkt) <= @max_pf_pkt_size do
+    work_ygg_pf_pkt(pkt, ipv4, port, sh_id)
+  end
   defp process_packet(<<@pf_marker, @pf_ver, _rest::binary>> = pkt, ipv4, port, _sh_id)
        when byte_size(pkt) >= @pf_header_size and byte_size(pkt) <= @max_pf_pkt_size do
     work_pf_pkt(pkt, ipv4, port)
@@ -227,6 +233,25 @@ defmodule GenS.UDPSocketShard do
   defp work_pf_pkt(_packet, _ipv4, _port) do
     GenS.Metrics.increment(:dropped_packets)
     :noop
+  end
+  defp work_ygg_pf_pkt(packet, {a, b, c, d}, port, shard_id) do
+    if Process.whereis(GenS.YggPFScanner) do
+      uaddr = <<a, b, c, d, port::16>>
+
+      case YggPF.Wire.parse(packet) do
+        {:ok, %{version: @ygg_pf_ver, opcode: opcode, tx_id: tx_id}}
+        when opcode == 0x0001 ->
+          if fid = YggPF.Self.fid() do
+            KRPCUtilsSync.send_packet(shard_id, uaddr, YggPF.Wire.pong(fid, tx_id))
+          end
+
+        {:ok, %{version: @ygg_pf_ver, opcode: opcode}}
+        when opcode == 0x4001 ->
+          GenS.YggPFScanner.pf_packet(packet, uaddr)
+
+        _ -> :noop
+      end
+    end
   end
   defp maybe_start_incoming_conn(peer, packet, shard_id) do
     if GenS.ConnectionsOut.utp_syn_allowed?(peer) do

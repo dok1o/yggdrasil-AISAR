@@ -283,7 +283,7 @@ defmodule GenS.YggPFScheduler do
 
   defp default_density do
     fnodes = YggPF.Store.reachable_yaddr_count()
-    legacy = max(TryETS.size(:nodes), 1)
+    legacy = max(TryETS.size(:dht_nodes), 1)
     {fnodes, legacy}
   end
 
