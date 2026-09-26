@@ -13,6 +13,7 @@ defmodule MagnetSorter.Application do
         node_supervisors() ++
         pf_supervisors() ++
         ygg_supervisors() ++
+        ygg_pf_supervisors() ++
         gui_bridge() ++
         control_plane()
     opts = [strategy: :one_for_one, name: MagnetSorter.Supervisor]
@@ -61,6 +62,12 @@ defmodule MagnetSorter.Application do
       Supervisor.child_spec(Spv.YggSup, restart: :temporary),
       Spv.YggSup.watch_spec()
     ]
+  end
+  # SDP bootstrap over Mainline DHT. Starts after ygg_supervisors/0 because
+  # candidate validation needs the embedded Ygg node (spec section 34), and is skipped
+  # entirely when Yggdrasil is disabled.
+  defp ygg_pf_supervisors() do
+    Spv.YggPFSup.child_spec_if_enabled()
   end
   defp gui_bridge() do
     [

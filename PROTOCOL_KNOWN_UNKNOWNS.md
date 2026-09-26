@@ -3,6 +3,19 @@
 **Mandated by §71.** Living document. Every binary-affecting protocol property is tracked
 here with an explicit status and the evidence backing it.
 
+> **RESOLVED — see [`docs/PROTOCOL_FROZEN.md`](docs/PROTOCOL_FROZEN.md).**
+>
+> The `BLOCKED: SPEC GAP` gate was raised, reported, and then lifted by explicit user
+> authorisation to implement from the specification. Because no conforming implementation
+> exists anywhere, the remaining `PARTIAL` / `UNKNOWN` rows below were **authoring
+> decisions**, not recoverable interop details. Each is now an explicit constant in
+> `YggPF.Const`, defined by the executable reference `tools/py_scripts/ygg_pf_ref.py` and
+> made normative by the 268 vectors in `data/ygg_pf_vectors.json`.
+>
+> This file is retained as the audit trail of what was and was not evidence-backed.
+> `docs/PROTOCOL_FROZEN.md` marks each decision as **Evidence** (recovered with a
+> `file:line` citation) or **Authored** (chosen, with stated grounds).
+
 **Status legend**
 
 | Status | Meaning |
