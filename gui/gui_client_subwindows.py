@@ -2,7 +2,8 @@
 import json
 from PySide6.QtWidgets import (
     QDialog, QDialogButtonBox, QVBoxLayout, QHBoxLayout, QFormLayout,
-    QSpinBox, QTextEdit, QGroupBox, QPushButton, QComboBox, QLineEdit, QCheckBox, QGridLayout
+    QSpinBox, QTextEdit, QGroupBox, QPushButton, QComboBox, QLineEdit, QCheckBox, QGridLayout,
+    QMessageBox
 )
 from gui_settings import read_settings_file
 #from gui_json_event_handler import EventFactory
@@ -102,6 +103,43 @@ class SettingsDialog(QDialog):
         add_setting(pf_gb, "Web-of-Trust Reference Level:", combo_wot, "web_of_trust_level", default_value="1-deep", enabled=False)
         right_col.addWidget(pf_gb)
 
+        # --- Yggdrasil Group ---
+        # GUI side only writes settings and emits an event; all scraping and
+        # bootstrap logic lives in Elixir (YggPF.WebPeers). Spec section 40.
+        ygg_gb = QGroupBox("Yggdrasil")
+        ygg_gb.setLayout(QFormLayout())
+
+        cb_enable_ygg = QCheckBox()
+        add_setting(ygg_gb, "Enable Yggdrasil:", cb_enable_ygg, "enable_ygg",
+                    default_value=True, enabled=True)
+
+        cb_web_scrape = QCheckBox()
+        add_setting(ygg_gb, "Web-scrape Peers:", cb_web_scrape, "ygg_web_scrape_peers",
+                    default_value=False, enabled=True)
+
+        region_edit = QLineEdit()
+        add_setting(ygg_gb, "Scrape Region:", region_edit, "ygg_web_scrape_region",
+                    default_value="europe", enabled=True)
+
+        limit_spin = QSpinBox()
+        limit_spin.setRange(1, 200)
+        add_setting(ygg_gb, "Max Web Peers:", limit_spin, "ygg_web_scrape_limit",
+                    default_value=20, enabled=True)
+
+        # "or update" half of spec section 40: refresh now, without waiting for a restart.
+        # Web-scraped peers stay low priority (spec section 36) and are outranked by
+        # scan-discovered relays (spec section 37) - the backend enforces that ordering.
+        self.scrape_now_btn = QPushButton("Scrape Peers Now")
+        self.scrape_now_btn.setToolTip(
+            "Fetch the Yggdrasil public-peers list now.\n"
+            "These peers are low priority and are replaced by\n"
+            "validated relays discovered through SDP scanning."
+        )
+        self.scrape_now_btn.clicked.connect(self._on_scrape_now)
+        ygg_gb.layout().addRow("", self.scrape_now_btn)
+
+        right_col.addWidget(ygg_gb)
+
         # --- Debug Group ---
         debug_gb = QGroupBox("Debug")
         debug_gb.setLayout(QFormLayout())
@@ -137,6 +175,34 @@ class SettingsDialog(QDialog):
     def on_change(self):
         """Enable Apply button when any setting changes."""
         self.apply_btn.setEnabled(True)
+
+    def _on_scrape_now(self):
+        """
+        Ask the backend to refresh web-scraped Yggdrasil peers (spec section 40).
+
+        Deliberately thin: the GUI does no fetching, parsing or config writing.
+        It emits one event and lets YggPF.WebPeers do the work, so scraping
+        logic stays in Elixir (spec section 39) and out of the GUI (spec section 40).
+        """
+        from gui_json_event_handler import EventFactory
+
+        region = self.settings_widgets["ygg_web_scrape_region"].text().strip() or "europe"
+        limit = self.settings_widgets["ygg_web_scrape_limit"].value()
+
+        window = self.parent()
+        sock = getattr(window, "socket", None)
+        if sock is None:
+            QMessageBox.warning(self, "Not Connected",
+                                "No backend connection; cannot request a peer scrape.")
+            return
+
+        try:
+            evt = EventFactory.gui_ygg_scrape_peers(region, limit).to_json()
+            sock.sendall(evt + b"\n")
+            self.scrape_now_btn.setText("Scrape requested...")
+            self.scrape_now_btn.setEnabled(False)
+        except (OSError, ValueError) as e:
+            QMessageBox.critical(self, "Scrape Failed", f"Could not request scrape:\n{e}")
 
     def get_current_settings(self):
         """Return a dict of current UI values mapped to config keys."""

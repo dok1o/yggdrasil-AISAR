@@ -10,7 +10,12 @@ defmodule GenS.SettingsManager do
     enable_pf: false,
     jsonl_append_tjf: true,
     hide_debug: false,
-    enable_ygg: true
+    enable_ygg: true,
+    # ygg_pf web scrape (spec sections 38, 40). Off by default: web-scraped peers are
+    # low priority (spec section 36) and SDP scanning is the primary discovery path.
+    ygg_web_scrape_peers: false,
+    ygg_web_scrape_region: "europe",
+    ygg_web_scrape_limit: 20
   }
   def start_link(opts \\ []) do
     file_path = Keyword.get(opts, :file_path, @settings_path)
