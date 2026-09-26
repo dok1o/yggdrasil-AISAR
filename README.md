@@ -19,3 +19,13 @@ forbids guessing them (§17, §18, §19, §72). `b_pf_new/` does not exist in th
 no public reference implementation exists, and no test vectors have been supplied.
 
 See [`docs/SPEC_FREEZE.md` §8](docs/SPEC_FREEZE.md) for the ranked list of ways to unblock.
+
+## Toolchain
+
+There is no Elixir/OTP toolchain in this environment and it cannot currently be installed
+(all BEAM distribution channels are outside the sandbox egress allowlist). See
+[`docs/TOOLCHAIN.md`](docs/TOOLCHAIN.md) for the measured reachability matrix and the six
+installation routes evaluated.
+
+`scripts/install-toolchain.sh` provisions a pinned, user-space OTP + Elixir (no root) and
+will work as soon as `builds.hex.pm` is reachable.
