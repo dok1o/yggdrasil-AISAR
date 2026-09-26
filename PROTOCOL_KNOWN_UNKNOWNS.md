@@ -16,10 +16,19 @@ here with an explicit status and the evidence backing it.
 (d) a later approved protocol document. Public standards (BEP5) are admissible where the
 spec defers to Mainline DHT.
 
-**Critical context:** per `docs/ARCHAEOLOGY.md`, `b_pf_new/` and all other referenced
-source material are **absent from this repository**, and no public reference
-implementation exists. Evidence source (b) is therefore currently unavailable, which is
-why so many rows below are `UNKNOWN`.
+**Critical context (revised 2026-09-26):** the codebase was supplied on `main` and has
+been mapped — see `docs/ARCHAEOLOGY.md`. Archaeology resolved **6 of 12** SPEC FREEZE
+items from real code. The decisive structural finding:
+
+> `b_pf_new/` is the **legacy** PF scheme. The 80/80 SDP mechanism in the specification
+> **has never been implemented** — no `fswarm` string, no cursor, no epoch prefix, no
+> painter address, no `yid`. `Sender.paint/0` is a literal `:noop`.
+
+So the remaining `UNKNOWN` rows are **not recoverable by further archaeology**; they are
+open design decisions, enumerated with recommendations in
+`docs/SPEC_DECISIONS_NEEDED.md`.
+
+Rows marked `VERIFIED (code)` cite file and line in this repository.
 
 ---
 
@@ -94,22 +103,31 @@ Must remain distinguishable; must not collapse to a generic "bootstrap failed" (
 
 ---
 
-## 2. Encoding unknowns (§48) — BLOCKING
+## 2. Encoding unknowns (§48)
 
 | Property | Status | Value | Evidence |
 |---|---|---|---|
-| 128-bit address representation | UNKNOWN | — | §48. No reference code. |
-| IPv4 representation inside 128 bits | UNKNOWN | — | §48. Candidates incl. IPv4-mapped `::ffff:a.b.c.d`, left-pad, right-pad — **not equivalent**. |
+| **Bit-reversal semantics** | ✅ **VERIFIED (code)** | **bits reversed within each byte; byte order preserved** | `b_pf_new/pf_mask_sync.ex:11-17,53-58` — `@in_byte_rev` lookup table + `reverse_bits/1` maps it over `bin_to_list` in order. Resolves §18 to its 2nd candidate. 72 bits = 9 whole bytes, applies cleanly. |
+| **Checksum algorithm** | ✅ **VERIFIED (code)** | **XOR-fold over fixed-width words, masked to low N bits** | `pf_mask_sync.ex:48-51` — `xor_checksum/1` + `fold/2`. No cryptographic hash is used anywhere in the mask. |
+| **Checksum input (pre/post reversal)** | ✅ **VERIFIED (code)** | **post-bit-reversal** | `pf_mask_sync.ex:16-21` — `generate_fid/1` reverses first, then checksums the reversed bits. |
+| **Checksum truncation direction** | ✅ **VERIFIED (code)** | **LSB-keeping** (`band(x, (1 <<< bits) - 1)`) | `pf_mask_sync.ex:48` |
+| Checksum fold width for an **8-bit** checksum | PARTIAL | legacy uses fold width = checksum width (16/16) | `pf_mask_sync.ex:9,23`. By analogy → 8-bit words. Proposed **D-9**. |
+| Affix internal order | UNKNOWN | — | §14 implies checksum last; `PFMaskSync` puts it near the front. Proposed **D-10**. |
+| 128-bit address representation | UNKNOWN | — | Depends on **D-1** (uaddr vs yaddr — §13/§14 contradict). |
+| IPv4 representation inside 128 bits | UNKNOWN | — | §48. Proposed **D-2** (IPv4-mapped `::ffff:a.b.c.d`). |
 | IPv6 representation | UNKNOWN | — | §48. |
-| Port byte order | UNKNOWN | — | §48. §72 forbids assuming network byte order. |
-| Address ∥ port concatenation order | UNKNOWN | — | §13 gives `128 + 16` but does not fix which occupies the high bits. |
-| 72-bit split order | UNKNOWN | — | §48. Which of part A / part B is the high 72 bits is undetermined. |
-| Bit-reversal semantics | **PARTIAL** | 72-bit part is reversed; *how* is undetermined | §18 lists 3 non-equivalent candidates: full 72-bit sequence reversal, per-byte bit reversal, byte-order reversal. |
-| Checksum algorithm | UNKNOWN | — | §19, §48. §72 explicitly forbids defaulting to SHA-256 etc. |
-| Checksum input | UNKNOWN | — | §19. Pre- or post-bit-reversal undetermined. |
-| Checksum truncation direction | UNKNOWN | — | §19, §48. MSB vs LSB — §72 forbids assuming. |
-| Checksum byte order | UNKNOWN | — | §19. |
-| Affix internal order | UNKNOWN | — | §14 gives `72 + 8` but does not fix whether checksum is suffix or prefix within the affix. |
+| Port byte order | UNKNOWN | — | Repo uses big-endian `<<a,b,c,d,port::16>>` throughout (`udp_shard.ex`, `UnpackSync`) — weak precedent. Proposed **D-3**. |
+| Address ∥ port concatenation order | UNKNOWN | — | §13 gives `128 + 16`, does not fix high bits. Proposed **D-3**. |
+| 72-bit split order | UNKNOWN | — | §48. Proposed **D-3** (MSB-first). |
+
+### 2.1 New finding — `yaddr` is derivable from `fid`
+
+| Property | Status | Value | Evidence |
+|---|---|---|---|
+| `yaddr` derivation | ✅ **VERIFIED (code + empirical)** | `yaddr = Ygg.Address.addr_for_key(fid)` | `vendor/ygg_ex/lib/ygg/address.ex`; independently re-derived in Python and matched against `data/ygg/ygg_address.txt` — `3f82…59b4` → `202:3eb:bc02:2e59:6617:5771:1ee0:fa2e` ✅ |
+
+**Consequence:** `yaddr` need not be transported by SDP. This is the main argument for
+D-1 = `uaddr`.
 
 ---
 
@@ -140,7 +158,8 @@ Must remain distinguishable; must not collapse to a generic "bootstrap failed" (
 | Prefix matching rule | UNKNOWN | — | §50. Exact-match vs "closest prefix" tolerance (§6, §7 both say "same / closest"). |
 | Affix matching rule | UNKNOWN | — | §50. |
 | Distance calculations | UNKNOWN | — | §50. Whether prefix/affix distance is plain XOR over the whole ID or segmented. |
-| Cooldown duration | UNKNOWN | — | §23, §50. "small cooldown" — value not given. |
+| Cooldown duration | PARTIAL | legacy precedent **30 000 ms** | `b_pf_new/pf_node_processor.ex:41` `@fping_ttl_ms 30_000`, via `TryETS.set_cooldown_ms/3` + `cooled_down_ms?/2`. Spec value not given. See **D-8**. |
+| Cooldown mechanism | ✅ VERIFIED (code) | ETS TTL set on send, checked before re-query, swept by `clean_expired/1` | `ets/try_ets.ex:93-105`, `pf_node_processor.ex:131-141` |
 | Scan-cycle definition | UNKNOWN | — | §50. Needed to define "after each scan cycle" (§28). |
 | Legacy-node cache representation | UNKNOWN | — | §50. |
 | Density calculation | UNKNOWN | — | §26, §50. |
@@ -150,19 +169,22 @@ Must remain distinguishable; must not collapse to a generic "bootstrap failed" (
 
 ---
 
-## 5. PF binary protocol unknowns (§51) — BLOCKING
+## 5. PF binary protocol (§51) — largely RESOLVED
 
 | Property | Status | Value | Evidence |
 |---|---|---|---|
-| `pingx` packet layout | UNKNOWN | — | §51. |
-| `pong` packet layout | UNKNOWN | — | §51. |
-| PF prefix format | UNKNOWN | — | §51. |
-| `fid` position within PF prefix | UNKNOWN | — | §51. Only "inside the PF prefix" (§32) is known. |
-| PF timeouts | UNKNOWN | — | §51. |
-| Malformed-response handling | UNKNOWN | — | §51. |
-| Duplicate-reply handling | UNKNOWN | — | §51. |
-| Replay behavior / anti-replay | UNKNOWN | — | §51. |
-| Ygg fixed port for `yaddr` | UNKNOWN | — | §30. "recovered from existing code/configuration". |
+| **`pingx` packet layout** | ✅ **VERIFIED (code)** | **bencoded KRPC `ping` query with magic key** — args `{"id": <20B>, "f": 0}`. *Not* a binary packet. | `static_sync/wire_sync.ex:144-147` (`@pf_magic "f"`, `@f_syn 0`) |
+| **`pong` packet layout** | ✅ **VERIFIED (code)** | 32-byte binary header: `[0x66 0x01 \| 2B][TxID 4B][Reserved 4B][SenderNodeID 20B][Opcode 2B][payload]`; `send_pong` uses null TxID + opcode `0x4001` | `b_pf_new/pf_out_sync.ex:7-26` |
+| **PF prefix format** | ✅ **VERIFIED (code)** | same 32-byte header; parsed as `<<mv::16, txid::32, reserved::32, frid::160, opcode::16, msg::binary>>` | `a_folder/udp_shard.ex:214-219` |
+| **`fid` position within PF prefix** | ⚠️ **CONFLICT** | header carries a **160-bit** `frid` at bit offset 80; spec §11/INV-017 requires a **256-bit** fid | `udp_shard.ex:214-219` vs §11. **Does not fit.** See **D-6**. |
+| **Responder behaviour** | ✅ **VERIFIED (code)** | PF node answers a `pingx` **twice**: binary pong *and* ordinary bencoded ping reply. Legacy node answers only the bencoded reply — **the binary pong is the discriminator** (§31). | `krpc/krpc_query_subtask.ex:67-76` |
+| **Opcodes** | ✅ **VERIFIED (code)** | `ping 0x0001`, `pong 0x4001`, `find_fnodes 0x0002`, `fnodes 0x4002`, `error 0x5001`, `token 0x5002`, `saddrs 0x5003`; plugins `0x7FFF..0xFFFF` | `b_pf_new/pf_worker_task.ex` |
+| **Packet size bounds** | ✅ **VERIFIED (code)** | `>= 32` and `<= 1200` bytes; else dropped | `udp_shard.ex:37-38,127-131` |
+| **Malformed-response handling** | ✅ **VERIFIED (code)** | non-matching binary → `work_pf_pkt/3` fallback → `Metrics.increment(:dropped_packets)` | `udp_shard.ex:227-230` |
+| PF timeouts | UNKNOWN | — | §51. No PF-level timeout exists; only the ping cooldown (§6). |
+| Duplicate-reply handling | UNKNOWN | — | §51. TxID is null in `send_pong`, so replies cannot currently be correlated. |
+| Replay behavior / anti-replay | UNKNOWN | — | §51. No nonce or anti-replay in the v1 header. |
+| Ygg fixed port for `yaddr` | UNKNOWN | — | §30. **Not in the repo**: `data/ygg/ygg.json` has `"Listen": []`; `ygg_address.txt` records port `0`. See **D-7**. |
 
 ---
 
@@ -171,13 +193,14 @@ Must remain distinguishable; must not collapse to a generic "bootstrap failed" (
 | Property | Status | Value | Evidence |
 |---|---|---|---|
 | Key/value shapes | VERIFIED | `{fid}` and `{fid, uaddr}` | §33 |
-| Table names | UNKNOWN | — | §33, §52. "follow existing repository conventions" — none exist. |
-| Table ownership | UNKNOWN | — | §52. |
-| Table lifetime | UNKNOWN | — | §52. |
-| Table types (`set`/`bag`/`ordered_set`) | UNKNOWN | — | §52. |
-| Concurrency assumptions | UNKNOWN | — | §52. |
-| Restart behavior | UNKNOWN | — | §52. |
-| Persistence behavior | UNKNOWN | — | §52. Interacts with §44 ("fnode cache from prior run"). |
+| **Existing tables matching §33** | ✅ VERIFIED (code) | `:fnodes` and `:fnodes_rev` (plus `:pf_inbox`) — already the two-structure shape §33 describes | `b_pf_new/pf_routing_table.ex:14-22` |
+| **Table creation convention** | ✅ VERIFIED (code) | `TryETS.create_many_named(names, :set, :public, true, true)` — public sets, read+write concurrency | `pf_routing_table.ex:25`, `ets/try_ets.ex:8-24` |
+| **Table ownership** | ✅ VERIFIED (code) | created by the owning GenServer in `init/1`; `:public` so any process may write | `pf_routing_table.ex`, `pf_node_processor.ex`, `pf_bootstrap.ex` |
+| **Table types** | ✅ VERIFIED (code) | `:set` throughout | as above |
+| **Concurrency assumptions** | ✅ VERIFIED (code) | read *and* write concurrency enabled; all access via `TryETS` safe wrappers that swallow `ArgumentError` | `ets/try_ets.ex` |
+| **Restart behavior** | ✅ VERIFIED (code) | ETS dies with its owner; `TryETS` degrades to defaults rather than crashing callers | `ets/try_ets.ex:64-74` |
+| Table names for `ygg_pf` | UNKNOWN | — | Local naming choice; convention now established. |
+| Persistence behavior | UNKNOWN | — | §52. Interacts with §44. `data/caches/boot.jsonl` exists as a prior-run cache precedent. |
 
 > Note: these are **local** design decisions, not wire-format. They do not threaten
 > interoperability and can be settled by ordinary design review once an application
@@ -189,16 +212,17 @@ Must remain distinguishable; must not collapse to a generic "bootstrap failed" (
 
 | Property | Status | Value | Evidence |
 |---|---|---|---|
-| Source URL list | UNKNOWN | — | §38, §53. Scripts absent. |
-| Source format | UNKNOWN | — | §53. |
-| Parsing rules | UNKNOWN | — | §38. |
-| Filter rules | UNKNOWN | — | §53. |
-| Validation | UNKNOWN | — | §53. |
-| Deduplication | UNKNOWN | — | §53. |
-| Refresh / update frequency | UNKNOWN | — | §38, §53. |
-| Failure handling | UNKNOWN | — | §53. |
-| Output format | UNKNOWN | — | §38. |
-| Peer-manager integration | UNKNOWN | — | §53. |
+| Source URL list | ✅ VERIFIED (code) | `https://api.github.com/repos/yggdrasil-network/public-peers/contents/$REGION`, `REGION=europe`, then each `.download_url` | `web scrape/ygg_peers_fetch.sh:4,17-29` |
+| Source format | ✅ VERIFIED (code) | GitHub contents JSON → Markdown peer files, concatenated | `ygg_peers_fetch.sh:24-29` |
+| Parsing rules | ✅ VERIFIED (code) | regex `(?:tcp\|tls\|quic\|ws\|wss\|socks\|sockstls)://[^\s\`<>()\[\]]+`, then `rstrip(".,);:'\"")` | `parse_ygg_peers.py:17-24` |
+| Filter rules | ✅ VERIFIED (code) | group by Ygg IPv6 identity found within 500 chars after the URI (`\b2[0-9a-f]{2}:[0-9a-f:]{10,}\b`, case-insens.), else by host; one URI per node; cap `MAX=20` | `parse_ygg_peers.py:31-70`, `ygg_peers_fetch.sh:5` |
+| Deduplication | ✅ VERIFIED (code) | order-preserving `if uri not in uris`, then per-identity grouping | `parse_ygg_peers.py:26-44` |
+| Selection order | ✅ VERIFIED (code) | `random.shuffle` of node groups — deliberately varies per run | `parse_ygg_peers.py:47-48` |
+| Output format | ✅ VERIFIED (code) | one peer URI per line on stdout; counts to stderr | `parse_ygg_peers.py:50-74` |
+| Config integration | ✅ VERIFIED (code) | regex-replace `Peers\s*:\s*\[[^\]]*\]` in `/etc/yggdrasil/yggdrasil.conf`, then `systemctl restart yggdrasil` | `update_ygg_config.py:27-41`, `ygg_peers_fetch.sh:52-60` |
+| Failure handling | ✅ VERIFIED (code) | `set -euo pipefail`; `exit 1` if no peers; `SystemExit("Peers block not found")` | scripts |
+| Refresh / update frequency | UNKNOWN | manual invocation only — no cron/timer in repo | §38 |
+| Peer-manager integration for `ygg_pf` | UNKNOWN | — | The scripts target the **system** daemon; the embedded node reads `data/ygg/ygg.json` (`PeerListFile`, `PublicPeers{Enabled,Count,CacheFile,CacheTTLHours}`). §37 forbids deleting user config. |
 | Required pipeline stages | VERIFIED | fetch → parse → validate → deduplicate → classify source → store/expose | §39 |
 | Implementation language | VERIFIED | Elixir; no permanent Python shell-out | §39 |
 | GUI separation | VERIFIED | PySide GUI logic separate from Elixir scraping/bootstrap logic | §40 |
@@ -209,47 +233,46 @@ Must remain distinguishable; must not collapse to a generic "bootstrap failed" (
 
 §70 lists 12 items that "must no longer be unknown" before implementation begins.
 
-| # | Freeze-gate item | Status |
-|---|---|---|
-| 1 | address representation | ❌ UNKNOWN |
-| 2 | bit reversal | ❌ PARTIAL |
-| 3 | checksum algorithm | ❌ UNKNOWN |
-| 4 | checksum input | ❌ UNKNOWN |
-| 5 | prefix hash algorithm | ❌ UNKNOWN |
-| 6 | N serialization | ❌ UNKNOWN |
-| 7 | R serialization | ❌ UNKNOWN |
-| 8 | epoch serialization | ❌ UNKNOWN |
-| 9 | 80-bit truncation | ❌ UNKNOWN |
-| 10 | pingx format | ❌ UNKNOWN |
-| 11 | pong format | ❌ UNKNOWN |
-| 12 | fid extraction | ❌ UNKNOWN |
+| # | Freeze-gate item | Status | Source |
+|---|---|---|---|
+| 1 | address representation | ❌ UNKNOWN | D-1/D-2 — §13 vs §14 contradict |
+| 2 | bit reversal | ✅ **RESOLVED** | `pf_mask_sync.ex` — per-byte, order preserved |
+| 3 | checksum algorithm | ✅ **RESOLVED** | `pf_mask_sync.ex` — XOR-fold, LSB mask |
+| 4 | checksum input | ✅ **RESOLVED** | `pf_mask_sync.ex` — post-reversal |
+| 5 | prefix hash algorithm | ❌ UNKNOWN | D-4 — no precedent in repo |
+| 6 | N serialization | ❌ UNKNOWN | D-4 |
+| 7 | R serialization | ❌ UNKNOWN | D-4 |
+| 8 | epoch serialization | ❌ UNKNOWN | D-4 |
+| 9 | 80-bit truncation | ❌ UNKNOWN | D-4 |
+| 10 | pingx format | ✅ **RESOLVED** | `wire_sync.ex` — bencoded ping + `"f":0` |
+| 11 | pong format | ✅ **RESOLVED** | `pf_out_sync.ex` / `udp_shard.ex` — 32-byte header, opcode `0x4001` |
+| 12 | fid extraction | ⚠️ **CONFLICT** | D-6 — header has 20-byte frid, spec needs 32-byte fid |
 
-**0 / 12 resolved. SPEC FREEZE FAILS.**
+**6 / 12 resolved, 1 conflict, 5 unknown. SPEC FREEZE STILL FAILS.**
 
 Per §70: *"If one remains unresolved and affects binary compatibility, the implementer must
-not invent it."* All twelve remain unresolved and all twelve affect binary compatibility.
+not invent it."*
 
 ```
-BLOCKED: SPEC GAP
+BLOCKED: SPEC GAP  (5 unknown + 1 conflict, down from 12 unknown)
 ```
 
 ---
 
 ## 9. How to unblock
 
-Any one of the following would resolve most or all of §2, §3 and §5:
+Archaeology is **exhausted** — the SDP scheme was never written, so no amount of further
+code reading will produce items 1 and 5–9. What remains are decisions, not discoveries.
 
-1. **Provide `b_pf_new/`** — the specification assumes it is in-tree (§10). This is the
-   primary intended evidence source and would likely close the majority of rows.
-2. **Provide the reference implementation** in any language (§0 admits "verified
-   reference implementation behavior").
-3. **Provide protocol test vectors** (§0 admits "accepted protocol test vectors"). §54
-   already enumerates exactly the vectors needed; a populated set of them would let the
-   encoder be derived and validated without seeing the reference source at all.
-4. **Provide a later approved protocol document** (§0) pinning the §48/§49/§51 details.
-5. **Packet capture** of a conforming node painting/scanning, plus the painter address it
-   was encoding — sufficient to reverse the encoding empirically.
+See **`docs/SPEC_DECISIONS_NEEDED.md`** for all ten, each with a repo-grounded
+recommendation. Of those:
 
-Option 3 is the cheapest high-value unblock: a handful of concrete
-`(address, port, epoch, N, R) → yid` tuples uniquely determines split order, bit-reversal
-semantics, checksum, prefix hash and truncation direction in combination.
+- **D-1, D-2, D-3, D-6, D-9, D-10** have defensible recommendations that can be approved
+  as-is.
+- **D-4 (prefix derivation) and D-5 (fixed prefix) have no evidentiary basis whatsoever.**
+  These are the true blockers.
+
+The cheapest complete unblock remains **protocol test vectors** (§0 admits these as
+authoritative, and §54 already enumerates exactly which are needed). A handful of concrete
+`(address, port, epoch, N, R) → yid` tuples would pin D-1 through D-5 and D-9/D-10
+simultaneously, by search against known-good outputs.

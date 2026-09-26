@@ -1,197 +1,162 @@
 # SPEC FREEZE — Gate Decision Record
 
-**Spec sections addressed:** §69 (Recommended Agent Pipeline), §70 (SPEC FREEZE), §72 (Anti-Hallucination Rule)
-
-**Date:** 2026-09-26
-**Decision:** ❌ **FREEZE REFUSED**
+**Spec sections addressed:** §69, §70, §72
+**Date:** 2026-09-26 (revision 2 — after the codebase was supplied on `main`)
+**Decision:** ❌ **FREEZE STILL REFUSED** — but 6 of 12 items are now resolved.
 
 ---
 
 ## 1. Decision
 
-The orchestrator gate defined in §70 **cannot be passed**. Implementation of the encoding
-layer, the prefix layer and the PF binary protocol **must not begin**.
+Archaeology against the real codebase resolved **6 of 12** freeze-gate items from
+evidence, and exposed **1 conflict**. **5 remain unknown.**
 
-```
-BLOCKED: SPEC GAP
-```
-
-§70 states the gate condition plainly:
+Because all five affect binary compatibility, §70 still applies:
 
 > "If one remains unresolved and affects binary compatibility, the implementer must not invent it."
 
-**0 of 12** freeze-gate items are resolved. **12 of 12** affect binary compatibility.
+```
+BLOCKED: SPEC GAP  (5 unknown + 1 conflict, down from 12 unknown)
+```
+
+**What changed:** the gap is no longer an *archaeology* problem. The SDP scheme described
+in the specification **has never been implemented** — there is no `fswarm` string, no
+cursor, no epoch-rotating prefix, no painter address and no `yid` anywhere in the
+repository, and `Sender.paint/0` is a literal `:noop`. Further code reading cannot
+produce the missing values. They are **decisions**, and they need a human.
 
 ---
 
-## 2. Gate checklist (§70, verbatim item list)
+## 2. Gate checklist (§70)
 
-| # | Item | Required status | Actual | Interop-critical? |
-|---|---|---|---|---|
-| 1 | address representation | resolved | ❌ UNKNOWN | Yes |
-| 2 | bit reversal | resolved | ❌ PARTIAL | Yes |
-| 3 | checksum algorithm | resolved | ❌ UNKNOWN | Yes |
-| 4 | checksum input | resolved | ❌ UNKNOWN | Yes |
-| 5 | prefix hash algorithm | resolved | ❌ UNKNOWN | Yes |
-| 6 | N serialization | resolved | ❌ UNKNOWN | Yes |
-| 7 | R serialization | resolved | ❌ UNKNOWN | Yes |
-| 8 | epoch serialization | resolved | ❌ UNKNOWN | Yes |
-| 9 | 80-bit truncation | resolved | ❌ UNKNOWN | Yes |
-| 10 | pingx format | resolved | ❌ UNKNOWN | Yes |
-| 11 | pong format | resolved | ❌ UNKNOWN | Yes |
-| 12 | fid extraction | resolved | ❌ UNKNOWN | Yes |
+| # | Item | Status | Basis |
+|---|---|---|---|
+| 1 | address representation | ❌ UNKNOWN | **§13 and §14 contradict** — see D-1 |
+| 2 | bit reversal | ✅ **RESOLVED** | `pf_mask_sync.ex:11-17,53-58` — bits reversed **within each byte**, byte order preserved |
+| 3 | checksum algorithm | ✅ **RESOLVED** | `pf_mask_sync.ex:48-51` — **XOR-fold** over fixed-width words, LSB mask |
+| 4 | checksum input | ✅ **RESOLVED** | `pf_mask_sync.ex:16-21` — **post**-bit-reversal |
+| 5 | prefix hash algorithm | ❌ UNKNOWN | no hash exists anywhere in the mask code |
+| 6 | N serialization | ❌ UNKNOWN | — |
+| 7 | R serialization | ❌ UNKNOWN | — |
+| 8 | epoch serialization | ❌ UNKNOWN | — |
+| 9 | 80-bit truncation | ❌ UNKNOWN | — |
+| 10 | pingx format | ✅ **RESOLVED** | `wire_sync.ex:144-147` — bencoded KRPC `ping` with `"f": 0` |
+| 11 | pong format | ✅ **RESOLVED** | `pf_out_sync.ex`, `udp_shard.ex:214-219` — 32-byte header, opcode `0x4001` |
+| 12 | fid extraction | ⚠️ **CONFLICT** | header carries **20-byte** `frid`; spec §11 requires **32-byte** fid — see D-6 |
 
-Detail and evidence for every row: [`../PROTOCOL_KNOWN_UNKNOWNS.md`](../PROTOCOL_KNOWN_UNKNOWNS.md).
+Full evidence: [`../PROTOCOL_KNOWN_UNKNOWNS.md`](../PROTOCOL_KNOWN_UNKNOWNS.md).
+Decisions and recommendations: [`SPEC_DECISIONS_NEEDED.md`](SPEC_DECISIONS_NEEDED.md).
 
 ---
 
-## 3. Why the gate cannot be passed by research
+## 3. Evidence sources (§0)
 
-§0 admits exactly four evidence sources. All four are currently unavailable:
-
-| Evidence source (§0) | Availability | Note |
+| Source | Availability | Note |
 |---|---|---|
-| Explicit human instruction | ⏳ **available on request** | The user can supply the missing values directly. |
-| Verified reference implementation behavior | ❌ unavailable | `b_pf_new/` absent; no public implementation exists. See `ARCHAEOLOGY.md` §4. |
-| Accepted protocol test vectors | ❌ unavailable | None provided. §54 specifies which are needed. |
-| A later approved protocol document | ❌ unavailable | None provided. |
-
-The English specification itself is authoritative but **deliberately silent** on these
-twelve items — it does not merely omit them, it explicitly designates them as things to be
-recovered elsewhere and explicitly forbids guessing:
-
-- §17: *"Do not guess any of these."*
-- §18: *"Only the behavior evidenced by existing/reference implementation should be used."*
-- §19: *"Until resolved, these are protocol unknowns."*
-- §72: *"Binary protocol implementation must never rely on 'reasonable defaults'."*
+| Explicit human instruction | ⏳ **the remaining path** | 10 decisions await approval. |
+| Verified reference implementation behavior | ⚠️ **partially used** | `b_pf_new/` supplied the *legacy* scheme, which yielded items 2, 3, 4, 10, 11. It contains **no SDP scheme** to copy. |
+| Accepted protocol test vectors | ❌ unavailable | Would resolve everything. §54 lists exactly which. |
+| A later approved protocol document | ❌ unavailable | — |
 
 ---
 
-## 4. Why guessing is not a viable shortcut
+## 4. Residual guess-space
 
-§72 forbids defaulting, and the combinatorics show why the prohibition is not merely
-stylistic. Counting only the *plausible* choices for each unresolved encoding degree of
-freedom:
+Recomputing §4 of revision 1 with the resolved items removed:
 
-| Degree of freedom | Plausible options | Running product |
+| Degree of freedom | Options | Running |
 |---|---|---|
-| IPv4-in-128 representation | 3 | 3 |
-| `addr ∥ port` order | 2 | 6 |
-| port byte order | 2 | 12 |
-| 72-bit split order | 2 | 24 |
-| bit-reversal semantics (§18 lists 3) | 3 | 72 |
-| checksum algorithm | 8 | 576 |
-| checksum input pre-/post-reversal | 2 | 1 152 |
-| checksum truncation direction | 2 | 2 304 |
-| affix internal order | 2 | 4 608 |
-| prefix hash algorithm | 6 | 27 648 |
-| `N` encoding | 2 | 55 296 |
-| `R` encoding | 2 | 110 592 |
-| epoch encoding / time basis | 4 | 442 368 |
-| prefix 80-bit truncation direction | 2 | **884 736** |
+| D-1 painter address = uaddr / yaddr | 2 | 2 |
+| D-2 IPv4-in-128 representation | 3 | 6 |
+| `addr ∥ port` order | 2 | 12 |
+| port byte order | 2 | 24 |
+| D-3 72-bit split order | 2 | 48 |
+| D-10 affix internal order | 2 | 96 |
+| D-4a prefix hash algorithm | 6 | 576 |
+| D-4c `N` encoding | 2 | 1 152 |
+| D-4c `R` encoding | 2 | 2 304 |
+| D-4d epoch encoding / basis | 4 | 9 216 |
+| D-4e truncation direction | 2 | **18 432** |
 
-**≈ 8.85 × 10⁵ mutually incompatible wire formats** — a conservative lower bound, before
-`pingx`/`pong` layout (§51), the fixed-prefix derivation (§27) and the Ygg fixed port
-(§30) are even considered.
+**≈ 1.8 × 10⁴ incompatible wire formats**, down from ≈ 8.85 × 10⁵ — a **48× reduction**.
 
-A guessed implementation therefore has an expected interoperability probability on the
-order of **1 in 900 000**. Worse, it would fail *silently and asymmetrically*: the node
-would bootstrap into Mainline DHT successfully (§2.2 — that part is generic and works),
-paint well-formed 20-byte IDs, scan, and find nothing but noise. Every failure mode in
-§42–§45 would fire while the actual defect is a wrong truncation direction. This is
-precisely the outcome §73 rules out:
+Real progress, but still ~18 000 ways to be silently wrong. The failure mode is unchanged
+and remains the reason not to guess: the node would bootstrap into Mainline DHT fine
+(§2.2 — generic and already working), paint well-formed 20-byte IDs, scan, and match
+nothing. Every §42–§45 failure condition would fire while the actual defect is, say, an
+epoch encoded as ASCII rather than binary.
 
-> "The goal is protocol compatibility, not merely approximate functional similarity."
+> §72: "A plausible implementation is not equivalent to an interoperable implementation."
 
-and §72:
-
-> "A plausible implementation is not equivalent to an interoperable implementation."
+If the recommendations in D-1/2/3/6/9/10 are approved, the residual space collapses to
+**D-4 alone: 6 × 2 × 2 × 4 × 2 = 384**. Still too many to guess, but it shows how narrow
+the true blocker is.
 
 ---
 
 ## 5. Pipeline state (§69)
 
 ```
-                    ┌─ Mainline DHT / SDP Research ....... PARTIAL — public BEP5 facts only;
-                    │                                      SDP-specific semantics blocked
-                    ├─ Ygg Encoding Research ............. BLOCKED — no admissible evidence source
-Task → Orchestrator ┤
-                    ├─ b_pf_new Archaeology .............. DONE — subject matter does not exist
+                    ┌─ Mainline DHT / SDP Research ....... DONE — BEP5 + repo KRPC layer mapped
                     │
-                    └─ Web/PySide Archaeology ............ DONE — subject matter does not exist
+                    ├─ Ygg Encoding Research ............. PARTIAL — primitives recovered,
+Task → Orchestrator ┤                                       SDP scheme does not exist
+                    ├─ b_pf_new Archaeology .............. DONE — legacy scheme, fully mapped
+                    │
+                    └─ Web/PySide Archaeology ............ DONE — fully recovered
                               │
                               ▼
-                       ██ SPEC FREEZE ██ ................. ❌ REFUSED  ◄── we are here
+                       ██ SPEC FREEZE ██ ................. ❌ REFUSED (6/12)  ◄── we are here
                               │
                               ▼
                     Elixir Implementer .................... NOT STARTED (correctly gated)
-                              │
-                              ▼
-                      PF Verifier ......................... not reached
-                              │
-                              ▼
-                    Adversarial Reviewer .................. not reached
 ```
-
-Two of the four research stages completed with a null finding; one is blocked; one is
-partial. The gate correctly refuses.
 
 ---
 
-## 6. What *is* frozen
+## 6. What is frozen and ready to build
 
-Not everything is blocked. The following are fixed by the specification alone and are safe
-to build against once the gate opens — or to build now in the non-interop layers:
+Substantially more than in revision 1:
 
-- **All structural sizes and invariants** — INV-001 … INV-020, and §56's property set
-  (`bit_size(prefix) == 80`, `bit_size(address_part) == 72`, `bit_size(checksum) == 8`,
-  `bit_size(affix) == 80`, `byte_size(yid) == 20`).
-- **Cursor logic** — `R = 0` initial, escalate when matching yids `> 8` (i.e. at 9),
-  reset each 1-minute epoch (§21, §22, §58).
-- **Scheduler rates** — 4 paint/s + 4 scan/s per cursor, 1 + 1 on the fixed prefix,
-  16 q/s total, paint lags scan (§23, §24, §25, §27).
-- **Trust state machine** — SDP candidate → `pingx` → valid `pong` → extract `fid` →
-  validated fnode; uaddr-only never reaches full trust without yaddr validation
-  (§31, §32, §34, §35).
-- **Failure-log taxonomy** — the four distinguishable conditions of §42–§45.
-- **Peer priority ordering** — validated scan-discovered relay > web-scraped peer;
-  routing priority is separate from config persistence (§36, §37).
+**Now evidence-backed and safe to implement:**
+- Bit reversal (per-byte), XOR-fold checksum, post-reversal ordering.
+- `pingx` = bencoded `ping` + `"f": 0`; `pong` = 32-byte PF binary header, opcode `0x4001`;
+  the binary pong as the PF-vs-legacy discriminator (§31).
+- `yaddr = Ygg.Address.addr_for_key(fid)` — **empirically verified** against
+  `data/ygg/ygg_address.txt`.
+- ETS conventions: public `:set` tables via `TryETS.create_many_named/5`; cooldown via
+  `set_cooldown_ms/3` + `cooled_down_ms?/2` + `clean_expired/1` (§23's mechanism, already built).
+- The complete web-scrape pipeline (§38, §53) — sources, regexes, dedup, limits, output.
+- The GUI settings channel (`data/settings.json` ↔ `settings_manager.ex`) for §40.
 
-These are *logic*, not *wire format*. They can be specified, tested and reviewed without
-resolving a single binary unknown — a candidate scope if partial progress is wanted while
-the gate stays shut.
+**Fixed by spec text alone** (unchanged from revision 1): all structural sizes and
+INV-001…INV-020, cursor logic (§21/§22/§58), scheduler rates (§23/§25/§27), the
+uaddr-vs-yaddr trust state machine (§31–§35), the §42–§45 failure taxonomy, and peer
+priority (§36/§37).
 
-**However**, note the dependency: this logic layer cannot be *executed end-to-end* or
-validated against a real network without the encoder. It is buildable as a tested pure
-core, not as a working bootstrap.
+**Still blocked:** the SDP encoder itself — painter address representation (D-1/D-2/D-3),
+prefix derivation (D-4), fixed prefix (D-5).
 
 ---
 
 ## 7. Secondary blocker: toolchain
 
-Independent of the protocol gap, this environment has **no Elixir/OTP toolchain**
-(`elixir`, `mix`, `erl` all absent; no distro package; no root). Any Elixir written here
-today could not be compiled or tested — it would be unverified code, which sits poorly
-beside a specification this insistent on evidence. Provisioning a precompiled OTP +
-Elixir into `$HOME` is the prerequisite for §66 work of any kind.
+Unchanged — see [`TOOLCHAIN.md`](TOOLCHAIN.md). No Elixir/OTP in this environment and all
+BEAM distribution channels are outside the sandbox egress allowlist.
+`README.txt` pins the project to **Elixir 1.19.5 / Python 3.11**.
+
+Note this is now a *hard* blocker for verification: the repo ships a real `mix` project
+with dependencies, so implementation work could not be compiled or tested here even once
+the protocol gate opens. `repo.hex.pm` is blocked too, so `mix deps.get` would also fail.
 
 ---
 
 ## 8. Recommended unblock
 
-Ranked by cost-to-value. Any single one of 1–3 opens most of the gate.
-
-1. **Supply `b_pf_new/`** (§10 assumes it is in-tree). Primary intended evidence source;
-   likely closes §48, §49, §51 together.
-2. **Supply protocol test vectors** — cheapest high-value option. §54 already enumerates
-   exactly the seven vector families needed. A handful of concrete
-   `(address, port, epoch, N, R) → yid` tuples collapses the 8.85 × 10⁵ space to 1:
-   split order, bit-reversal semantics, checksum, prefix hash and both truncation
-   directions are all jointly recoverable by search against known-good outputs.
-3. **Supply the reference implementation** in any language.
-4. **Supply a packet capture** of a conforming node painting, plus the address it encoded.
-5. **Explicitly authorise** a non-interoperable v0 — permitted only by §0's "explicit human
-   instruction" clause. This would mean accepting that the result will not talk to any
-   existing fnode, and pinning our chosen values as the new normative reference.
-
-Until one of these lands, the correct action is to hold the gate shut.
+1. **Answer D-4** (prefix hash algorithm, literal bytes, `N`/`R`/epoch serialization,
+   truncation direction) and **D-5** (fixed prefix). These are the true blockers.
+2. **Approve or correct** the recommendations for D-1, D-2, D-3, D-6, D-9, D-10.
+3. **Or supply test vectors** — §54's list, populated. This subsumes 1 and 2 entirely and
+   is the most reliable route to actual interoperability.
+4. **Allowlist `builds.hex.pm` + `repo.hex.pm`** so the implementation can be compiled and
+   tested rather than written blind.
