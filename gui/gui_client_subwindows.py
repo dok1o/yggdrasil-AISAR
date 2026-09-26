@@ -118,13 +118,15 @@ class SettingsDialog(QDialog):
                     default_value=False, enabled=True)
 
         region_edit = QLineEdit()
+        region_edit.setToolTip('"all" walks every region recursively; or name one, e.g. "europe".')
         add_setting(ygg_gb, "Scrape Region:", region_edit, "ygg_web_scrape_region",
-                    default_value="europe", enabled=True)
+                    default_value="all", enabled=True)
 
         limit_spin = QSpinBox()
         limit_spin.setRange(1, 200)
-        add_setting(ygg_gb, "Max Web Peers:", limit_spin, "ygg_web_scrape_limit",
-                    default_value=20, enabled=True)
+        limit_spin.setToolTip("How many peers to connect at startup, drawn at random.")
+        add_setting(ygg_gb, "Bootstrap Peers:", limit_spin, "ygg_web_scrape_limit",
+                    default_value=16, enabled=True)
 
         # "or update" half of spec section 40: refresh now, without waiting for a restart.
         # Web-scraped peers stay low priority (spec section 36) and are outranked by

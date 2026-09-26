@@ -21,6 +21,8 @@ defmodule Spv.YggPFSup do
   @impl true
   def init(opts) do
     children = [
+      # First: the Ygg node needs transport before anything can be validated (spec section 34).
+      {GenS.YggPFWebPeers, opts},
       {GenS.YggPFScanner, opts},
       {GenS.YggPFScheduler, opts},
       {YggPF.YggProbe, opts}

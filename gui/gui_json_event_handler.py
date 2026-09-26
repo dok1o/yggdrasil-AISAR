@@ -64,15 +64,16 @@ class EventFactory:
             raise ValueError(f"Invalid IPv4 address: {ip_str}")
         
     @staticmethod
-    def gui_ygg_scrape_peers(region: str = "europe", limit: int = 20):
+    def gui_ygg_scrape_peers(region: str = "all", limit: int = 16):
         """
         Request a refresh of web-scraped Yggdrasil peers (spec section 40).
 
         Carries only the user's intent. Fetching, parsing, validation and
         deduplication all happen backend-side in YggPF.WebPeers (spec section 39).
         """
-        region = (region or "europe").strip().lower()
-        if not region.isalnum():
+        region = (region or "all").strip().lower()
+        # "all" walks every region; otherwise a single directory name (may contain "-")
+        if not region.replace("-", "").isalnum():
             raise ValueError(f"Invalid region: {region!r}")
         if not isinstance(limit, int) or not (1 <= limit <= 200):
             raise ValueError(f"Invalid peer limit: {limit!r}")

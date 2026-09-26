@@ -198,4 +198,27 @@ defmodule YggPF.Const do
 
   @doc "Deadline after which no candidates *and* no DHT boot is a failure (spec section 45)."
   def no_boot_deadline_ms, do: @no_boot_deadline_ms
+
+  # --- web scrape (spec sections 36-39) ------------------------------------ #
+
+  @web_cache_ttl_ms 2 * 60 * 60 * 1000
+  @web_bootstrap_peers 16
+
+  @doc """
+  How long a scrape of the public-peers repository stays usable: 2 hours.
+
+  Long enough that restarts do not hammer the GitHub API (unauthenticated
+  api.github.com allows 60 requests/hour and a full recursive walk costs one
+  request per directory), short enough that dead peers age out.
+  """
+  def web_cache_ttl_ms, do: @web_cache_ttl_ms
+
+  @doc """
+  How many web-scraped peers the node connects to at startup.
+
+  Drawn at random from the whole cached population, not the first N, so repeated
+  starts spread load across the public peer set instead of converging on the same
+  few hosts.
+  """
+  def web_bootstrap_peers, do: @web_bootstrap_peers
 end
